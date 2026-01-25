@@ -1,9 +1,8 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, UniqueConstraint
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, Enum as SAEnum
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
-from app.models.player import PlayerRole
-
+from app.models.enums import PlayerRole
 
 
 class Player(Base):
@@ -16,7 +15,7 @@ class Player(Base):
     last_name = Column(String, nullable=False)
 
     jersey_number = Column(Integer, nullable=False)
-    role = Column(Enum(PlayerRole), nullable=False)
+    role = Column(SAEnum(PlayerRole), nullable=False)
     license_number = Column(String, nullable=True)
 
     team = relationship("Team", back_populates="players")
