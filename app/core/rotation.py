@@ -1,4 +1,4 @@
-def rotate_positions_map(pos_to_player: dict[int, int]) -> dict[int, int]:
+def rotate_positions(pos_to_player: dict[int, int]) -> dict[int, int]:
     
     return {
         1: pos_to_player[2],

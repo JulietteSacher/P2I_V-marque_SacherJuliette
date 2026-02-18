@@ -19,4 +19,7 @@ class Match(Base):
     team_a_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
     team_b_id = Column(Integer, ForeignKey("teams.id"), nullable=False)
 
+    # ✅ 2 = best of 3 (2 sets gagnants), 3 = best of 5 (3 sets gagnants)
+    sets_to_win = Column(Integer, default=2, nullable=False)
+
     sets = relationship("Set", back_populates="match", cascade="all, delete-orphan")

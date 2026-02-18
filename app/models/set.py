@@ -16,4 +16,6 @@ class Set(Base):
     score_team_b = Column(Integer, default=0)
     status = Column(Enum(SetStatus), default=SetStatus.not_started)
 
+    serving_team_id = Column(Integer, ForeignKey("teams.id"), nullable=True)
+
     match = relationship("Match", back_populates="sets")
