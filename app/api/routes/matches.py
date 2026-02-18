@@ -1,9 +1,9 @@
 from __future__ import annotations
+
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 
 from app.core.database import get_db
 from app.core.volley_rules import is_set_won
@@ -39,6 +39,7 @@ def _get_match_or_404(db: Session, match_id: int) -> Match:
 
 
 def _get_current_set_or_400(db: Session, match_id: int) -> Set:
+    """Set courant UNIQUEMENT s'il est running (pour ajouter des actions)."""
     current_set = (
         db.query(Set)
         .filter(Set.match_id == match_id)
@@ -52,21 +53,43 @@ def _get_current_set_or_400(db: Session, match_id: int) -> Set:
     return current_set
 
 
+def _get_latest_set_or_400(db: Session, match_id: int) -> Set:
+    """Dernier set (running OU not_started) (utile pour /serve)."""
+    s = (
+        db.query(Set)
+        .filter(Set.match_id == match_id)
+        .order_by(Set.set_number.desc())
+        .first()
+    )
+    if not s:
+        raise HTTPException(status_code=400, detail="Aucun set trouvé. Démarre le match.")
+    if s.status == SetStatus.finished:
+        raise HTTPException(status_code=400, detail="Le dernier set est terminé.")
+    return s
+
+
 def _other_team_id(match: Match, team_id: int) -> int:
     return match.team_b_id if team_id == match.team_a_id else match.team_a_id
 
+
 def _max_sets(match: Match) -> int:
-    # 2 -> 3 sets max ; 3 -> 5 sets max
+    # sets_to_win=2 -> 3 sets max ; sets_to_win=3 -> 5 sets max
     return 2 * match.sets_to_win - 1
 
 
-def _count_sets_won(match: Match) -> tuple[int, int]:
+def _count_sets_won(db: Session, match: Match) -> tuple[int, int]:
+    """
+    Compte les sets gagnés par A et B.
+    Ici on infère le gagnant via score (car ton modèle Set n'a pas winner_id).
+    """
+    finished_sets = (
+        db.query(Set)
+        .filter(Set.match_id == match.id, Set.status == SetStatus.finished)
+        .all()
+    )
     a_won = 0
     b_won = 0
-    for s in match.sets:
-        # Certains modèles n'ont pas winner_id : on infère par score à la fin
-        if s.status != SetStatus.finished:
-            continue
+    for s in finished_sets:
         if s.score_team_a > s.score_team_b:
             a_won += 1
         elif s.score_team_b > s.score_team_a:
@@ -99,37 +122,53 @@ def _require_lineups_ready(db: Session, match: Match) -> None:
 
 
 def _clear_lineups_for_new_set(db: Session, match_id: int) -> None:
-    # ✅ “Remettre le lineup” : on vide le terrain pour les 2 équipes
+    """
+    ✅ À chaque nouveau set : il faut “remettre le lineup”.
+    Donc on vide le terrain (pour les 2 équipes).
+    """
     db.query(LineupPosition).filter(
         LineupPosition.match_id == match_id,
         LineupPosition.is_on_court.is_(True),
     ).delete(synchronize_session=False)
 
+
 def _award_point_and_maybe_finish_set(db: Session, match: Match, current_set: Set, winning_team_id: int) -> None:
-    # Incrément score
+    """Utilisé par /point et /actions."""
+    # 1) Incrément score
     if winning_team_id == match.team_a_id:
         current_set.score_team_a += 1
     else:
         current_set.score_team_b += 1
 
-    # Fin de set ?
+    # 2) Fin de set ?
     if is_set_won(current_set.score_team_a, current_set.score_team_b, current_set.set_number):
         current_set.status = SetStatus.finished
-
-        # Créer set suivant si < 5
-        if current_set.set_number < 5:
-            next_set = Set(
-                match_id=match.id,
-                set_number=current_set.set_number + 1,
-                status=SetStatus.running,
-                score_team_a=0,
-                score_team_b=0,
-                serving_team_id=None,  # à définir au début du set
-            )
-            db.add(next_set)
-        else:
+        db.flush()
+        # 3) Fin de match ?
+        a_sets, b_sets = _count_sets_won(db, match)
+        if a_sets >= match.sets_to_win or b_sets >= match.sets_to_win:
             match.status = MatchStatus.finished
             match.finished_at = datetime.now(timezone.utc)
+            return
+
+        # 4) Sinon créer set suivant (not_started) si possible
+        if current_set.set_number >= _max_sets(match):
+            match.status = MatchStatus.finished
+            match.finished_at = datetime.now(timezone.utc)
+            return
+
+        next_set = Set(
+            match_id=match.id,
+            set_number=current_set.set_number + 1,
+            status=SetStatus.not_started,  # ✅ démarre via /serve
+            score_team_a=0,
+            score_team_b=0,
+            serving_team_id=None,
+        )
+        db.add(next_set)
+
+        # ✅ exiger de remettre le lineup pour le prochain set
+        _clear_lineups_for_new_set(db, match.id)
 
 
 def _rotate_team_if_needed(
@@ -150,7 +189,6 @@ def _rotate_team_if_needed(
     # 1️⃣ Validation : seul pos 1 sert
     # ===============================
     if serving_player_id is not None:
-
         if current_set.serving_team_id is None:
             raise HTTPException(
                 status_code=400,
@@ -191,7 +229,6 @@ def _rotate_team_if_needed(
     # 3️⃣ Si changement de service → rotation
     # ===================================
     if winning_team_id != current_set.serving_team_id:
-
         lineup = (
             db.query(LineupPosition)
             .filter(
@@ -209,26 +246,21 @@ def _rotate_team_if_needed(
                 detail="Rotation impossible : 6 joueurs doivent être définis.",
             )
 
-        # mapping position -> player
         pos_map = {lp.position: lp.player_id for lp in lineup}
-
         if set(pos_map.keys()) != {1, 2, 3, 4, 5, 6}:
             raise HTTPException(
                 status_code=400,
                 detail="Positions incomplètes (1..6 requises).",
             )
 
-        # Rotation logique
         rotated = rotate_positions(pos_map)
 
-        # FK-safe : on supprime les anciennes lignes
         db.query(LineupPosition).filter(
             LineupPosition.match_id == match.id,
             LineupPosition.team_id == winning_team_id,
             LineupPosition.is_on_court.is_(True),
         ).delete(synchronize_session=False)
 
-        # On recrée les nouvelles positions
         for pos in range(1, 7):
             db.add(
                 LineupPosition(
@@ -262,12 +294,13 @@ def create_match(payload: MatchCreate, db: Session = Depends(get_db)):
     match = Match(
         team_a_id=payload.team_a_id,
         team_b_id=payload.team_b_id,
-        sets_to_win=payload.sets_to_win,  # ✅
+        sets_to_win=payload.sets_to_win,  # ✅ 2 ou 3
     )
     db.add(match)
     db.commit()
     db.refresh(match)
     return match
+
 
 @router.post("/{match_id}/start", response_model=MatchRead)
 def start_match(match_id: int, db: Session = Depends(get_db)):
@@ -282,14 +315,14 @@ def start_match(match_id: int, db: Session = Depends(get_db)):
     first_set = Set(
         match_id=match.id,
         set_number=1,
-        status=SetStatus.not_started,  # ✅ démarre seulement après /serve
+        status=SetStatus.not_started,  # ✅ démarre via /serve
         score_team_a=0,
         score_team_b=0,
         serving_team_id=None,
     )
     db.add(first_set)
 
-    # ✅ On force à définir le lineup pour le set 1 (en le vidant)
+    # ✅ set 1 : on exige de remettre le lineup
     _clear_lineups_for_new_set(db, match.id)
 
     db.commit()
@@ -312,7 +345,7 @@ def get_current_set(match_id: int, db: Session = Depends(get_db)):
 
 
 # -------------------------
-# (Optionnel) point direct - tu peux le garder ou le supprimer
+# (Optionnel) point direct
 # -------------------------
 @router.post("/{match_id}/point")
 def add_point(match_id: int, payload: PointCreate, db: Session = Depends(get_db)):
@@ -323,7 +356,6 @@ def add_point(match_id: int, payload: PointCreate, db: Session = Depends(get_db)
 
     current_set = _get_current_set_or_400(db, match_id)
 
-    # Incrémenter le score (sans stats/rotation)
     if payload.side == TeamSide.A:
         winning_team_id = match.team_a_id
     else:
@@ -349,47 +381,32 @@ def add_point(match_id: int, payload: PointCreate, db: Session = Depends(get_db)
 # -------------------------
 @router.post("/{match_id}/actions", response_model=ActionRead, status_code=status.HTTP_201_CREATED)
 def add_action(match_id: int, payload: ActionCreate, db: Session = Depends(get_db)):
-
     # 1) Vérifier match
-    match = db.query(Match).filter(Match.id == match_id).first()
-    if not match:
-        raise HTTPException(status_code=404, detail="Match introuvable.")
+    match = _get_match_or_404(db, match_id)
     if match.status != MatchStatus.running:
         raise HTTPException(status_code=400, detail="Le match n'est pas en cours.")
 
-    # 2) Récupérer le set courant
-    current_set = (
-        db.query(Set)
-        .filter(Set.match_id == match_id)
-        .order_by(Set.set_number.desc())
-        .first()
-    )
-    if not current_set or current_set.status != SetStatus.running:
-        raise HTTPException(status_code=400, detail="Aucun set en cours. Démarre le match.")
+    # 2) Récupérer le set courant (doit être running)
+    current_set = _get_current_set_or_400(db, match_id)
 
     # 3) Vérifier joueur
     player = db.query(Player).filter(Player.id == payload.player_id).first()
     if not player:
         raise HTTPException(status_code=404, detail="Joueur introuvable.")
 
-    # Vérifier que le joueur appartient à une des 2 équipes du match
     if player.team_id not in (match.team_a_id, match.team_b_id):
         raise HTTPException(status_code=400, detail="Ce joueur ne participe pas à ce match.")
 
-    # 4) Logique point : à qui va le point ?
-    # "point_won" = point pour l'équipe du joueur (utile pour stats type ace/kill/block)
+    # 4) À qui va le point ?
     point_for_actor_team = action_gives_point(payload.action_type)
-
-    # Déterminer l'équipe qui gagne le point (IMPORTANT pour *_ERROR)
     error_actions = {ActionType.SERVICE_ERROR, ActionType.ATTACK_ERROR, ActionType.BLOCK_ERROR}
 
     if point_for_actor_team:
         winning_team_id = player.team_id
     elif payload.action_type in error_actions:
-        winning_team_id = match.team_b_id if player.team_id == match.team_a_id else match.team_a_id
+        winning_team_id = _other_team_id(match, player.team_id)
     else:
-        # Si un jour tu ajoutes des actions "neutres" qui ne donnent pas de point
-        winning_team_id = None
+        winning_team_id = None  # actions neutres éventuelles
 
     # 5) Enregistrer l'action (stats)
     action = RallyAction(
@@ -402,9 +419,8 @@ def add_action(match_id: int, payload: ActionCreate, db: Session = Depends(get_d
     )
     db.add(action)
 
-    # 6) Si l'action entraîne un point, on met à jour score + rotation/service
+    # 6) Si point : rotation/service + score + fin set/match
     if winning_team_id is not None:
-
         # 6a) Validation serveur uniquement pour actions de service
         if payload.action_type in {ActionType.SERVICE_ACE, ActionType.SERVICE_ERROR}:
             _rotate_team_if_needed(
@@ -422,30 +438,8 @@ def add_action(match_id: int, payload: ActionCreate, db: Session = Depends(get_d
                 winning_team_id=winning_team_id,
             )
 
-        # 6b) Incrémenter le score du set pour l'équipe gagnante du point
-        if winning_team_id == match.team_a_id:
-            current_set.score_team_a += 1
-        else:
-            current_set.score_team_b += 1
-
-        # 6c) Vérifier fin de set
-        if is_set_won(current_set.score_team_a, current_set.score_team_b, current_set.set_number):
-            current_set.status = SetStatus.finished
-
-            # créer set suivant automatiquement si < 5
-            if current_set.set_number < 5:
-                next_set = Set(
-                    match_id=match_id,
-                    set_number=current_set.set_number + 1,
-                    status=SetStatus.running,
-                    score_team_a=0,
-                    score_team_b=0,
-                    serving_team_id=None,  # on redéfinira via /matches/{id}/serve ou au 1er point
-                )
-                db.add(next_set)
-            else:
-                match.status = MatchStatus.finished
-                match.finished_at = datetime.now(timezone.utc)
+        # 6b) Score + set/match transitions (inclut création next set + reset lineup)
+        _award_point_and_maybe_finish_set(db, match, current_set, winning_team_id)
 
     # 7) Commit final
     db.commit()
@@ -453,24 +447,39 @@ def add_action(match_id: int, payload: ActionCreate, db: Session = Depends(get_d
     return action
 
 
-# Route dédiée pour définir l'équipe au service (ex: au début du set ou pour corr
+# -------------------------
+# Début de set : définir l'équipe au service
+# -------------------------
 @router.post("/{match_id}/serve")
 def set_serving_team(match_id: int, payload: ServeStart, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
-    current_set = _get_current_set_or_400(db, match_id)
+
+    if match.status != MatchStatus.running:
+        raise HTTPException(status_code=400, detail="Le match n'est pas en cours.")
+
+    current_set = _get_latest_set_or_400(db, match_id)
 
     if payload.team_id not in (match.team_a_id, match.team_b_id):
         raise HTTPException(status_code=400, detail="Cette équipe ne participe pas au match.")
 
+    # ✅ Exiger que les 2 lineups soient prêts AVANT de démarrer le set
+    _require_lineups_ready(db, match)
+
     current_set.serving_team_id = payload.team_id
+    current_set.status = SetStatus.running  # ✅ le set démarre ici
+
     db.commit()
     db.refresh(current_set)
 
     return {
         "match_id": match_id,
         "set_id": current_set.id,
+        "set_number": current_set.set_number,
+        "set_status": current_set.status,
         "serving_team_id": current_set.serving_team_id,
     }
+
+
 # -------------------------
 # Player stats
 # -------------------------
@@ -540,7 +549,6 @@ def get_player_stats_by_search(
     if player.team_id not in (match.team_a_id, match.team_b_id):
         raise HTTPException(status_code=400, detail="Ce joueur ne participe pas à ce match.")
 
-    # Reuse stats
     actions = (
         db.query(RallyAction)
         .filter(RallyAction.match_id == match_id, RallyAction.player_id == player.id)
@@ -583,7 +591,7 @@ def get_team_stats(match_id: int, team_id: int, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
 
     if team_id not in (match.team_a_id, match.team_b_id):
-        raise HTTPException(status_code=400, detail="Cette équipe ne participe pas à ce match.")
+        raise HTTPException(status_code=400, detail="Cette équipe ne participe pas au match.")
 
     actions = (
         db.query(RallyAction)
