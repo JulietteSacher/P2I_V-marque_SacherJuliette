@@ -625,8 +625,10 @@ def get_team_stats(match_id: int, team_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{match_id}/teams/{team_id}/lineup")
 def get_team_lineup(match_id: int, team_id: int, db: Session = Depends(get_db)):
+
     lineup = (
-        db.query(LineupPosition)
+        db.query(LineupPosition, Player)
+        .join(Player, Player.id == LineupPosition.player_id)
         .filter(
             LineupPosition.match_id == match_id,
             LineupPosition.team_id == team_id,
@@ -635,4 +637,12 @@ def get_team_lineup(match_id: int, team_id: int, db: Session = Depends(get_db)):
         .order_by(LineupPosition.position)
         .all()
     )
-    return [{"position": lp.position, "player_id": lp.player_id} for lp in lineup]
+
+    return [
+        {
+            "position": lp.position,
+            "jersey_number": player.jersey_number
+        }
+        for lp, player in lineup
+    ]
+

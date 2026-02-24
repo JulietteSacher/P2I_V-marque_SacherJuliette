@@ -16,6 +16,7 @@ def set_initial_lineup(
     lineup: LineupCreate,
     db: Session = Depends(get_db),
 ):
+    # positions -> jersey_number
     positions = {
         1: lineup.p1,
         2: lineup.p2,
@@ -24,32 +25,52 @@ def set_initial_lineup(
         5: lineup.p5,
         6: lineup.p6,
     }
+    jersey_numbers = list(positions.values())
 
-    # Vérification appartenance joueurs
+    # Vérifier doublons de maillots
+    if len(set(jersey_numbers)) != 6:
+        raise HTTPException(status_code=400, detail="Numéros de maillot dupliqués dans le lineup.")
+
+    # Récupérer les joueurs par (team_id + jersey_number)
     players = (
         db.query(Player)
-        .filter(Player.id.in_(positions.values()), Player.team_id == team_id)
+        .filter(
+            Player.team_id == team_id,
+            Player.jersey_number.in_(jersey_numbers),
+        )
         .all()
     )
 
     if len(players) != 6:
-        raise HTTPException(status_code=400, detail="Joueurs invalides pour l’équipe.")
+        found = sorted([p.jersey_number for p in players])
+        requested = sorted(jersey_numbers)
+        missing = sorted(list(set(requested) - set(found)))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Lineup invalide : team_id={team_id}, demandés={requested}, trouvés={found}, manquants={missing}",
+        )
 
-    # Nettoyage ancien lineup
+    # mapping jersey_number -> player_id
+    jersey_to_player_id = {p.jersey_number: p.id for p in players}
+
+    # Nettoyage ancien lineup (uniquement joueurs sur le terrain)
     db.query(LineupPosition).filter(
         LineupPosition.match_id == match_id,
         LineupPosition.team_id == team_id,
-    ).delete()
+        LineupPosition.is_on_court.is_(True),
+    ).delete(synchronize_session=False)
 
-    # Création lineup
-    for pos, player_id in positions.items():
-        db.add(LineupPosition(
-            match_id=match_id,
-            team_id=team_id,
-            position=pos,
-            player_id=player_id,
-            is_on_court=True,
-        ))
+    # Création lineup : on stocke player_id en DB
+    for pos, jersey in positions.items():
+        db.add(
+            LineupPosition(
+                match_id=match_id,
+                team_id=team_id,
+                position=pos,
+                player_id=jersey_to_player_id[jersey],
+                is_on_court=True,
+            )
+        )
 
     db.commit()
-    return {"status": "rotation initiale enregistrée"}
+    return {"status": "lineup enregistré", "match_id": match_id, "team_id": team_id}
