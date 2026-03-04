@@ -15,7 +15,7 @@ def _create_6_players(client, team_id: int, prefix: str):
     return players
 
 
-def test_player_stats(client):
+def test_rotation_when_team_wins_service(client):
     team_a = client.post("/teams", json={"name": "Team A"}).json()
     team_b = client.post("/teams", json={"name": "Team B"}).json()
 
@@ -26,6 +26,7 @@ def test_player_stats(client):
         "/matches",
         json={"team_a_id": team_a["id"], "team_b_id": team_b["id"], "sets_to_win": 2},
     ).json()
+
     client.post(f"/matches/{match['id']}/start")
 
     client.post(f"/lineup/matches/{match['id']}/teams/{team_a['id']}",
@@ -33,30 +34,18 @@ def test_player_stats(client):
     client.post(f"/lineup/matches/{match['id']}/teams/{team_b['id']}",
                 json={"p1": 1, "p2": 2, "p3": 3, "p4": 4, "p5": 5, "p6": 6})
 
-    # A au service pour permettre SERVICE_ACE / SERVICE_ERROR
-    client.post(f"/matches/{match['id']}/serve", json={"team_id": team_a["id"]})
+    # B sert (doit réussir)
+    r = client.post(f"/matches/{match['id']}/serve", json={"team_id": team_b["id"]})
+    assert r.status_code == 200, r.text
 
-    # 1 point d'attaque
-    client.post(f"/matches/{match['id']}/actions", json={
-        "player_id": players_a[4],
-        "action_type": "ATTACK_KILL"
-    })
+    # A gagne => récupération service => rotation A
+    r = client.post(
+        f"/matches/{match['id']}/actions",
+        json={"player_id": players_a[4], "action_type": "ATTACK_KILL"},
+    )
+    assert r.status_code == 201, r.text
 
-    # 1 ace (pos1 = jersey 1)
-    client.post(f"/matches/{match['id']}/actions", json={
-        "player_id": players_a[1],
-        "action_type": "SERVICE_ACE"
-    })
+    lineup = client.get(f"/matches/{match['id']}/teams/{team_a['id']}/lineup").json()
 
-    # 1 faute de service (pos1)
-    client.post(f"/matches/{match['id']}/actions", json={
-        "player_id": players_a[1],
-        "action_type": "SERVICE_ERROR"
-    })
-
-    stats = client.get(f"/matches/{match['id']}/players/{players_a[1]}/stats").json()
-    assert stats["service_points"] == 1
-    assert stats["service_faults"] == 1
-
-    stats2 = client.get(f"/matches/{match['id']}/players/{players_a[4]}/stats").json()
-    assert stats2["attack_points"] == 1
+    # lineup est trié par position (1..6). pos1 après rotation = ancien pos2 => jersey 2
+    assert lineup[0]["jersey_number"] == 2
