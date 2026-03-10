@@ -1,0 +1,17 @@
+<div class="court-card">
+  <h3>{{ teamName }}</h3>
+
+  <div class="court">
+    @for (row of [0, 1]; track row) {
+      @for (col of [0, 1, 2]; track col) {
+        <div class="cell">
+          @if (getCell(col, row); as playerCell) {
+            <div class="position">P{{ playerCell.position }}</div>
+            <div class="jersey">#{{ playerCell.jersey_number }}</div>
+            <div class="label">{{ playerCell.label }}</div>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

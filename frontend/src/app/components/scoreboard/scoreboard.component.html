@@ -1,0 +1,16 @@
+<div class="scoreboard">
+  <div class="team" [class.serving]="servingTeamId === teamAId">
+    <div class="team-name">{{ teamAName }}</div>
+    <div class="team-score">{{ scoreA }}</div>
+  </div>
+
+  <div class="middle">
+    <div class="set-label">Set {{ setNumber }}</div>
+    <div class="vs">VS</div>
+  </div>
+
+  <div class="team" [class.serving]="servingTeamId === teamBId">
+    <div class="team-name">{{ teamBName }}</div>
+    <div class="team-score">{{ scoreB }}</div>
+  </div>
+</div>

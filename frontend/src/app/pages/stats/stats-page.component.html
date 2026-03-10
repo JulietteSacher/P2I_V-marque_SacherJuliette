@@ -1,0 +1,35 @@
+@if (loading) {
+  <p>Chargement des statistiques...</p>
+} @else if (error) {
+  <p>{{ error }}</p>
+} @else if (teamA && teamB && statsA && statsB) {
+  <h1>Statistiques du match</h1>
+
+  <div class="stats-grid">
+    <div class="stats-card">
+      <h2>{{ teamA.name }}</h2>
+      <p>Points service : {{ statsA.service_points }}</p>
+      <p>Points attaque : {{ statsA.attack_points }}</p>
+      <p>Points contre : {{ statsA.block_points }}</p>
+      <p>Fautes service : {{ statsA.service_faults }}</p>
+      <p>Fautes attaque : {{ statsA.attack_faults }}</p>
+      <p>Fautes contre : {{ statsA.block_faults }}</p>
+      <hr />
+      <p><strong>Total points :</strong> {{ statsA.total_points }}</p>
+      <p><strong>Total fautes :</strong> {{ statsA.total_faults }}</p>
+    </div>
+
+    <div class="stats-card">
+      <h2>{{ teamB.name }}</h2>
+      <p>Points service : {{ statsB.service_points }}</p>
+      <p>Points attaque : {{ statsB.attack_points }}</p>
+      <p>Points contre : {{ statsB.block_points }}</p>
+      <p>Fautes service : {{ statsB.service_faults }}</p>
+      <p>Fautes attaque : {{ statsB.attack_faults }}</p>
+      <p>Fautes contre : {{ statsB.block_faults }}</p>
+      <hr />
+      <p><strong>Total points :</strong> {{ statsB.total_points }}</p>
+      <p><strong>Total fautes :</strong> {{ statsB.total_faults }}</p>
+    </div>
+  </div>
+}

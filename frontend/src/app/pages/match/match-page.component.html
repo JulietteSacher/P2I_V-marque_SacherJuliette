@@ -1,0 +1,32 @@
+@if (loading) {
+  <p>Chargement du match...</p>
+} @else if (error) {
+  <p>{{ error }}</p>
+} @else if (currentSet && teamA && teamB && courtA && courtB) {
+  <section class="page-header">
+    <div>
+      <h1>Gestion du match</h1>
+      <p>Suivi du score, du service et des positions sur le terrain.</p>
+    </div>
+
+    <a [routerLink]="['/match', matchId, 'stats']" class="stats-link">
+      Voir les statistiques
+    </a>
+  </section>
+
+  <app-scoreboard
+    [teamAName]="teamA.name"
+    [teamBName]="teamB.name"
+    [scoreA]="currentSet.score_team_a"
+    [scoreB]="currentSet.score_team_b"
+    [setNumber]="currentSet.set_number"
+    [servingTeamId]="currentSet.serving_team_id"
+    [teamAId]="teamA.id"
+    [teamBId]="teamB.id"
+  />
+
+  <section class="courts-grid">
+    <app-court [teamName]="teamA.name" [cells]="courtA.cells" />
+    <app-court [teamName]="teamB.name" [cells]="courtB.cells" />
+  </section>
+}

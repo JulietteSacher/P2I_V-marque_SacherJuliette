@@ -17,7 +17,9 @@ from app.models.set import Set
 from app.models.rally_action import RallyAction
 from app.models.lineup_position import LineupPosition
 from app.models.enums import MatchStatus, SetStatus, TeamSide, ActionType
+from app.models.service_spot_snapshot import ServiceSpotSnapshot
 
+from app.schemas.service_spot import ServiceSpotsCreate
 from app.schemas.match import MatchCreate, MatchRead
 from app.schemas.score import PointCreate
 from app.schemas.action import ActionCreate, ActionRead
@@ -301,6 +303,10 @@ def create_match(payload: MatchCreate, db: Session = Depends(get_db)):
     db.refresh(match)
     return match
 
+@router.get("/{match_id}", response_model=MatchRead)
+def get_match(match_id: int, db: Session = Depends(get_db)):
+    match = _get_match_or_404(db, match_id)
+    return match
 
 @router.post("/{match_id}/start", response_model=MatchRead)
 def start_match(match_id: int, db: Session = Depends(get_db)):
@@ -577,8 +583,86 @@ def get_player_stats_by_search(
         total_points=total_points,
         total_faults=total_faults,
     )
+# -------------------------Position au service (spots)-------------------------
+#------------------------------------------------------------------------------
+@router.get("/{match_id}/teams/{team_id}/court-view")
+def get_court_view(match_id: int, team_id: int, db: Session = Depends(get_db)):
+    match = _get_match_or_404(db, match_id)
 
+    if team_id not in (match.team_a_id, match.team_b_id):
+        raise HTTPException(status_code=400, detail="Cette équipe ne participe pas au match.")
 
+    current_set = (
+        db.query(Set)
+        .filter(Set.match_id == match_id)
+        .order_by(Set.set_number.desc())
+        .first()
+    )
+    if not current_set:
+        raise HTTPException(status_code=400, detail="Aucun set pour ce match.")
+
+    rows = (
+        db.query(LineupPosition, Player)
+        .join(Player, Player.id == LineupPosition.player_id)
+        .filter(
+            LineupPosition.match_id == match_id,
+            LineupPosition.team_id == team_id,
+            LineupPosition.is_on_court.is_(True),
+        )
+        .all()
+    )
+    if len(rows) != 6:
+        raise HTTPException(status_code=400, detail="Lineup incomplet : 6 positions (1..6) requises.")
+
+    pos_to_jersey = {lp.position: p.jersey_number for (lp, p) in rows}
+    if set(pos_to_jersey.keys()) != {1, 2, 3, 4, 5, 6}:
+        raise HTTPException(status_code=400, detail="Lineup invalide : positions 1..6 requises.")
+
+    # Position -> cellule (x,y) + libellé
+    # x: 0 gauche, 1 centre, 2 droite
+    # y: 0 avant (filet), 1 arrière
+    pos_to_cell = {
+        4: {"x": 0, "y": 0, "label": "Avant gauche"},
+        3: {"x": 1, "y": 0, "label": "Avant centre"},
+        2: {"x": 2, "y": 0, "label": "Avant droit"},
+        5: {"x": 0, "y": 1, "label": "Arrière gauche"},
+        6: {"x": 1, "y": 1, "label": "Arrière centre"},
+        1: {"x": 2, "y": 1, "label": "Arrière droit"},
+    }
+
+    cells = []
+    for pos in [4, 3, 2, 5, 6, 1]:
+        c = pos_to_cell[pos]
+        cells.append(
+            {
+                "x": c["x"],
+                "y": c["y"],
+                "position": pos,
+                "label": c["label"],
+                "jersey_number": pos_to_jersey[pos],
+            }
+        )
+
+    constraints = {
+        "left_right": [
+            {"a_pos": 4, "b_pos": 3, "rule": "a_left_of_b"},
+            {"a_pos": 3, "b_pos": 2, "rule": "a_left_of_b"},
+            {"a_pos": 5, "b_pos": 6, "rule": "a_left_of_b"},
+            {"a_pos": 6, "b_pos": 1, "rule": "a_left_of_b"},
+        ],
+        "front_back": [
+            {"front_pos": 4, "back_pos": 5, "rule": "front_in_front_of_back"},
+            {"front_pos": 3, "back_pos": 6, "rule": "front_in_front_of_back"},
+            {"front_pos": 2, "back_pos": 1, "rule": "front_in_front_of_back"},
+        ],
+    }
+
+    return {
+        "team_id": team_id,
+        "set_id": current_set.id,
+        "cells": cells,
+        "constraints": constraints,
+    }
 # -------------------------
 # Team stats
 # -------------------------

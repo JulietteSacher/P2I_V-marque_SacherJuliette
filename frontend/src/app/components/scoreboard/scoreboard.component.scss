@@ -1,0 +1,47 @@
+.scoreboard {
+  display: grid;
+  grid-template-columns: 1fr 180px 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+.team,
+.middle {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.team-name {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.team-score {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.middle {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.set-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.vs {
+  font-size: 1.4rem;
+  color: #6b7280;
+}
+
+.serving {
+  border: 3px solid #22c55e;
+}

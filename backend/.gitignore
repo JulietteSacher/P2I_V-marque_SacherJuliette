@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 *.sqlite3
 *.db
+.pytest_cache/
 
 # Virtual env
 .venv/
@@ -13,7 +14,12 @@ venv/
 # Env files
 .env
 
-# OS/IDE
+# OS / IDE
 .DS_Store
 .vscode/
 .idea/
+
+# Angular frontend
+../frontend/node_modules/
+../frontend/.angular/
+../frontend/dist/
