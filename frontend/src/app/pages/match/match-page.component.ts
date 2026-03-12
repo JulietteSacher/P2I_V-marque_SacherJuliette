@@ -4,7 +4,6 @@ import { forkJoin } from 'rxjs';
 
 import { MatchesService } from '../../api/matches.service';
 import { TeamsService } from '../../api/teams.service';
-import { ScoreboardComponent } from '../../components/scoreboard/scoreboard.component';
 import { CourtComponent } from '../../components/court/court.component';
 import {
   CourtView,
@@ -16,7 +15,7 @@ import {
 @Component({
   selector: 'app-match-live-page',
   standalone: true,
-  imports: [ScoreboardComponent, CourtComponent, RouterLink],
+  imports: [CourtComponent, RouterLink],
   templateUrl: './match-page.component.html',
   styleUrl: './match-page.component.scss',
 })

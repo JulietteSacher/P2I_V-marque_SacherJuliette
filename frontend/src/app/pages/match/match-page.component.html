@@ -1,32 +1,135 @@
 @if (loading) {
-  <p>Chargement du match...</p>
+  <div class="match-shell">
+    <div class="loading-box">Chargement du match...</div>
+  </div>
 } @else if (error) {
-  <p>{{ error }}</p>
-} @else if (currentSet && teamA && teamB && courtA && courtB) {
-  <section class="page-header">
-    <div>
-      <h1>Gestion du match</h1>
-      <p>Suivi du score, du service et des positions sur le terrain.</p>
-    </div>
+  <div class="match-shell">
+    <div class="error-box">{{ error }}</div>
+  </div>
+} @else if (match && currentSet && teamA && teamB && courtA && courtB) {
+  <div class="match-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="app-badge">V</div>
+        <div>
+          <div class="app-title">V-Marque</div>
+          <div class="app-subtitle">Table de marque volley</div>
+        </div>
+      </div>
 
-    <a [routerLink]="['/match', matchId, 'stats']" class="stats-link">
-      Voir les statistiques
-    </a>
-  </section>
+      <nav class="topbar-center">
+        <span class="nav-pill">Avant match</span>
+        <span class="nav-pill active">Match</span>
+        <a class="nav-pill link" [routerLink]="['/match', matchId, 'stats']">Après-match / Stats</a>
+      </nav>
 
-  <app-scoreboard
-    [teamAName]="teamA.name"
-    [teamBName]="teamB.name"
-    [scoreA]="currentSet.score_team_a"
-    [scoreB]="currentSet.score_team_b"
-    [setNumber]="currentSet.set_number"
-    [servingTeamId]="currentSet.serving_team_id"
-    [teamAId]="teamA.id"
-    [teamBId]="teamB.id"
-  />
+      <div class="topbar-right">
+        <button class="refresh-btn" type="button" (click)="refresh()">Actualiser</button>
+      </div>
+    </header>
 
-  <section class="courts-grid">
-    <app-court [teamName]="teamA.name" [cells]="courtA.cells" />
-    <app-court [teamName]="teamB.name" [cells]="courtB.cells" />
-  </section>
+    <section class="score-section">
+      <div class="team-score-card red">
+        <div class="team-label">Locaux</div>
+        <div class="team-name">{{ teamA.name }}</div>
+        <div class="big-score">{{ currentSet.score_team_a }}</div>
+        <div class="mini-info" [class.serving]="currentSet.serving_team_id === teamA.id">
+          @if (currentSet.serving_team_id === teamA.id) {
+            Service
+          } @else {
+            Réception
+          }
+        </div>
+      </div>
+
+      <div class="center-score-card">
+        <div class="center-top">
+          <div class="small-box">Set</div>
+          <div class="small-box value">{{ currentSet.set_number }}</div>
+        </div>
+
+        <div class="score-middle">
+          <div class="vs-mark">VS</div>
+          <div class="set-fraction">1 / {{ match.sets_to_win }}</div>
+        </div>
+
+        <div class="center-bottom">
+          <div class="status-pill">{{ match.status }}</div>
+        </div>
+      </div>
+
+      <div class="team-score-card green">
+        <div class="team-label">Visiteurs</div>
+        <div class="team-name">{{ teamB.name }}</div>
+        <div class="big-score">{{ currentSet.score_team_b }}</div>
+        <div class="mini-info" [class.serving]="currentSet.serving_team_id === teamB.id">
+          @if (currentSet.serving_team_id === teamB.id) {
+            Service
+          } @else {
+            Réception
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <aside class="team-panel red-panel">
+        <div class="panel-header">
+          <span class="team-tag">A</span>
+          <h2>{{ teamA.name }}</h2>
+        </div>
+
+        <div class="players-table">
+          <div class="table-head">
+            <span>Position</span>
+            <span>Joueur</span>
+            <span>N°</span>
+          </div>
+
+          @for (cell of courtA.cells; track cell.position) {
+            <div class="table-row">
+              <span class="pos-badge">P{{ cell.position }}</span>
+              <span>{{ cell.label }}</span>
+              <span class="jersey-cell">#{{ cell.jersey_number }}</span>
+            </div>
+          }
+        </div>
+      </aside>
+
+      <section class="court-zone">
+        <div class="court-card">
+          <div class="court-title">Terrain</div>
+          <app-court
+            [teamAName]="teamA.name"
+            [teamBName]="teamB.name"
+            [cellsA]="courtA.cells"
+            [cellsB]="courtB.cells"
+          />
+        </div>
+      </section>
+
+      <aside class="team-panel green-panel">
+        <div class="panel-header right">
+          <h2>{{ teamB.name }}</h2>
+          <span class="team-tag">B</span>
+        </div>
+
+        <div class="players-table">
+          <div class="table-head">
+            <span>Position</span>
+            <span>Joueur</span>
+            <span>N°</span>
+          </div>
+
+          @for (cell of courtB.cells; track cell.position) {
+            <div class="table-row">
+              <span class="pos-badge">P{{ cell.position }}</span>
+              <span>{{ cell.label }}</span>
+              <span class="jersey-cell">#{{ cell.jersey_number }}</span>
+            </div>
+          }
+        </div>
+      </aside>
+    </section>
+  </div>
 }

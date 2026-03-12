@@ -8,10 +8,18 @@ import { CourtCell } from '../../models/match.model';
   styleUrl: './court.component.scss',
 })
 export class CourtComponent {
-  @Input() teamName = '';
-  @Input() cells: CourtCell[] = [];
+  @Input() teamAName = 'Locaux';
+  @Input() teamBName = 'Visiteurs';
+  @Input() cellsA: CourtCell[] = [];
+  @Input() cellsB: CourtCell[] = [];
 
-  getCell(x: number, y: number): CourtCell | undefined {
-    return this.cells.find((c) => c.x === x && c.y === y);
+  getCell(cells: CourtCell[], position: number): CourtCell | undefined {
+    return cells.find((c) => c.position === position);
   }
+
+  leftTopPositions = [4, 3, 2];
+  leftBottomPositions = [5, 6, 1];
+
+  rightTopPositions = [2, 3, 4];
+  rightBottomPositions = [1, 6, 5];
 }

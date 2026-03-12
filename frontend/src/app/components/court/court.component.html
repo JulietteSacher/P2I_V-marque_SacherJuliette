@@ -1,17 +1,63 @@
-<div class="court-card">
-  <h3>{{ teamName }}</h3>
+<div class="volley-wrapper">
+  <div class="court-header">
+    <div class="team-chip red">{{ teamAName }}</div>
+    <div class="net-label">Filet</div>
+    <div class="team-chip green">{{ teamBName }}</div>
+  </div>
 
-  <div class="court">
-    @for (row of [0, 1]; track row) {
-      @for (col of [0, 1, 2]; track col) {
-        <div class="cell">
-          @if (getCell(col, row); as playerCell) {
-            <div class="position">P{{ playerCell.position }}</div>
-            <div class="jersey">#{{ playerCell.jersey_number }}</div>
-            <div class="label">{{ playerCell.label }}</div>
-          }
-        </div>
-      }
-    }
+  <div class="volley-court">
+    <div class="half left-half">
+      <div class="row">
+        @for (pos of leftTopPositions; track pos) {
+          <div class="zone red-zone">
+            @if (getCell(cellsA, pos); as cell) {
+              <div class="zone-pos">P{{ cell.position }}</div>
+              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
+              <div class="zone-name">{{ cell.label }}</div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="row">
+        @for (pos of leftBottomPositions; track pos) {
+          <div class="zone red-zone">
+            @if (getCell(cellsA, pos); as cell) {
+              <div class="zone-pos">P{{ cell.position }}</div>
+              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
+              <div class="zone-name">{{ cell.label }}</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="net"></div>
+
+    <div class="half right-half">
+      <div class="row">
+        @for (pos of rightTopPositions; track pos) {
+          <div class="zone green-zone">
+            @if (getCell(cellsB, pos); as cell) {
+              <div class="zone-pos">P{{ cell.position }}</div>
+              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
+              <div class="zone-name">{{ cell.label }}</div>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="row">
+        @for (pos of rightBottomPositions; track pos) {
+          <div class="zone green-zone">
+            @if (getCell(cellsB, pos); as cell) {
+              <div class="zone-pos">P{{ cell.position }}</div>
+              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
+              <div class="zone-name">{{ cell.label }}</div>
+            }
+          </div>
+        }
+      </div>
+    </div>
   </div>
 </div>
