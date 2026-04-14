@@ -389,3 +389,22 @@
     justify-content: center;
   }
 }
+
+.player-row {
+  padding: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 8px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+select,
+button {
+  margin-top: 8px;
+  padding: 8px;
+}

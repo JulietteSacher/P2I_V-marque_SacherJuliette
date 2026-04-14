@@ -1,16 +1,83 @@
-h1 {
-  margin-bottom: 20px;
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.stats-grid {
+.teams-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
-.stats-card {
+.team-card,
+.player-stats-card {
   background: white;
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stat-box {
+  border: 1px solid #e4e7ee;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-box span {
+  color: #5b6475;
+  font-size: 14px;
+}
+
+.stat-box strong {
+  font-size: 24px;
+  color: #1f3b93;
+}
+
+.search-input {
+  max-width: 480px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #cfd3dc;
+}
+
+.players-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.player-card {
+  text-align: left;
+  border: 1px solid #e4e7ee;
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+}
+
+.info-box,
+.error-box {
+  padding: 16px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+.info-box {
+  background: #eef3ff;
+  color: #1f3b93;
+}
+
+.error-box {
+  background: #ffe3e3;
+  color: #b42318;
 }

@@ -5,6 +5,7 @@ export interface MatchRead {
   team_b_id: number;
   sets_to_win: number;
 }
+
 export interface SetRead {
   id: number;
   set_number: number;
@@ -41,4 +42,54 @@ export interface CourtView {
 export interface LineupPlayer {
   position: number;
   jersey_number: number;
+}
+
+export interface MatchLiveRead {
+  match: MatchRead;
+  current_set: SetRead;
+  team_a: TeamRead;
+  team_b: TeamRead;
+  court_a: CourtView;
+  court_b: CourtView;
+}
+
+export interface MatchCreatePayload {
+  team_a_id: number;
+  team_b_id: number;
+  sets_to_win: number;
+}
+
+export interface TeamCreatePayload {
+  name: string;
+}
+
+export interface PlayerCreatePayload {
+  first_name: string;
+  last_name: string;
+  jersey_number: number;
+  role: string;
+  license_number?: string | null;
+}
+
+export interface LineupCreatePayload {
+  p1: number;
+  p2: number;
+  p3: number;
+  p4: number;
+  p5: number;
+  p6: number;
+}
+
+export interface ServeStartPayload {
+  team_id: number;
+}
+
+export interface SwapPlayerPayload {
+  player_out_id: number;
+  player_in_id: number;
+}
+
+export interface ActionCreatePayload {
+  player_id: number;
+  action_type: string;
 }

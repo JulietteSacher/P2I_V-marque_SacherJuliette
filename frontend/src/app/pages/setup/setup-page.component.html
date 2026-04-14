@@ -1,0 +1,97 @@
+<div class="page">
+  <h1>Feuille de match</h1>
+
+  <div class="buttons-row">
+  
+
+  <button type="button" class="secondary-btn" (click)="newMatch()" [disabled]="loading">
+    Nouveau match
+  </button>
+
+</div>
+  <div class="block">
+    <label>Nom équipe A</label>
+    <input [(ngModel)]="teamAName" />
+  </div>
+
+  <div class="block">
+    <label>Nom équipe B</label>
+    <input [(ngModel)]="teamBName" />
+  </div>
+
+  <div class="block">
+    <label>Sets à gagner</label>
+    <select [(ngModel)]="setsToWin">
+      <option [ngValue]="2">2</option>
+      <option [ngValue]="3">3</option>
+    </select>
+  </div>
+
+  <div class="block">
+    <label>Équipe au service au départ</label>
+    <select [(ngModel)]="servingSide">
+      <option value="A">Équipe A</option>
+      <option value="B">Équipe B</option>
+    </select>
+  </div>
+
+  <h2>Joueurs équipe A</h2>
+  @for (player of teamAPlayers; track $index) {
+    <div class="row">
+      <input placeholder="Prénom" [(ngModel)]="player.first_name" />
+      <input placeholder="Nom" [(ngModel)]="player.last_name" />
+      <input type="number" placeholder="Maillot" [(ngModel)]="player.jersey_number" />
+      <select [(ngModel)]="player.role">
+        <option value="PASSEUR">PASSEUR</option>
+        <option value="POINTU">POINTU</option>
+        <option value="R4">R4</option>
+        <option value="CENTRAL">CENTRAL</option>
+        <option value="LIBERO">LIBERO</option>
+      </select>
+    </div>
+  }
+
+  <h2>Joueurs équipe B</h2>
+  @for (player of teamBPlayers; track $index) {
+    <div class="row">
+      <input placeholder="Prénom" [(ngModel)]="player.first_name" />
+      <input placeholder="Nom" [(ngModel)]="player.last_name" />
+      <input type="number" placeholder="Maillot" [(ngModel)]="player.jersey_number" />
+      <select [(ngModel)]="player.role">
+        <option value="PASSEUR">PASSEUR</option>
+        <option value="POINTU">POINTU</option>
+        <option value="R4">R4</option>
+        <option value="CENTRAL">CENTRAL</option>
+        <option value="LIBERO">LIBERO</option>
+      </select>
+    </div>
+  }
+
+  <h2>Position initiale équipe A</h2>
+  <div class="row">
+    <input type="number" [(ngModel)]="lineupA.p1" placeholder="P1" />
+    <input type="number" [(ngModel)]="lineupA.p2" placeholder="P2" />
+    <input type="number" [(ngModel)]="lineupA.p3" placeholder="P3" />
+    <input type="number" [(ngModel)]="lineupA.p4" placeholder="P4" />
+    <input type="number" [(ngModel)]="lineupA.p5" placeholder="P5" />
+    <input type="number" [(ngModel)]="lineupA.p6" placeholder="P6" />
+  </div>
+
+  <h2>Position initiale équipe B</h2>
+  <div class="row">
+    <input type="number" [(ngModel)]="lineupB.p1" placeholder="P1" />
+    <input type="number" [(ngModel)]="lineupB.p2" placeholder="P2" />
+    <input type="number" [(ngModel)]="lineupB.p3" placeholder="P3" />
+    <input type="number" [(ngModel)]="lineupB.p4" placeholder="P4" />
+    <input type="number" [(ngModel)]="lineupB.p5" placeholder="P5" />
+    <input type="number" [(ngModel)]="lineupB.p6" placeholder="P6" />
+  </div>
+
+  <button (click)="createMatchFlow()" [disabled]="loading">
+    {{ loading ? 'Création...' : 'Créer le match' }}
+  </button>
+
+  @if (error) {
+    <p class="error">{{ error }}</p>
+  }
+</div>

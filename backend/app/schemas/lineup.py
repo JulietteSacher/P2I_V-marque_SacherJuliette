@@ -1,8 +1,7 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel
 
 
 class LineupCreate(BaseModel):
-    # ✅ maintenant ce sont des NUMÉROS DE MAILLOT
     p1: int
     p2: int
     p3: int
@@ -10,9 +9,39 @@ class LineupCreate(BaseModel):
     p5: int
     p6: int
 
-    @field_validator("p1", "p2", "p3", "p4", "p5", "p6")
-    @classmethod
-    def validate_jersey_number(cls, v: int) -> int:
-        if v <= 0:
-            raise ValueError("Le numéro de maillot doit être un entier positif.")
-        return v
+
+class SwapPlayerRequest(BaseModel):
+    player_out_id: int
+    player_in_id: int
+
+
+class CourtCell(BaseModel):
+    x: int
+    y: int
+    position: int
+    label: str
+    jersey_number: int
+
+
+class LeftRightConstraint(BaseModel):
+    a_pos: int
+    b_pos: int
+    rule: str
+
+
+class FrontBackConstraint(BaseModel):
+    front_pos: int
+    back_pos: int
+    rule: str
+
+
+class CourtConstraints(BaseModel):
+    left_right: list[LeftRightConstraint]
+    front_back: list[FrontBackConstraint]
+
+
+class CourtView(BaseModel):
+    team_id: int
+    set_id: int
+    cells: list[CourtCell]
+    constraints: CourtConstraints

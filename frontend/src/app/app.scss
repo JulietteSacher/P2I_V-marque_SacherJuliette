@@ -44,3 +44,21 @@
 .page-content {
   padding: 24px;
 }
+
+
+.logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: white;
+  padding: 2px;
+}
+
+.nav-disabled {
+  color: rgba(255, 255, 255, 0.6);
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: not-allowed;
+}
