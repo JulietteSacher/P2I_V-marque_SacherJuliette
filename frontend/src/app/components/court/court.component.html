@@ -1,59 +1,101 @@
-<div class="volley-wrapper">
-  <div class="court-header">
-    <div class="team-chip red">{{ teamAName }}</div>
+<div class="court-shell">
+  <div class="court-topbar">
+    <div class="team-chip" [style.background]="teamAColor" [style.color]="textColor(teamAColor)">
+      {{ teamAName }}
+    </div>
     <div class="net-label">Filet</div>
-    <div class="team-chip green">{{ teamBName }}</div>
+    <div class="team-chip" [style.background]="teamBColor" [style.color]="textColor(teamBColor)">
+      {{ teamBName }}
+    </div>
   </div>
 
-  <div class="volley-court">
-    <div class="half left-half">
-      <div class="row">
-        @for (pos of leftTopPositions; track pos) {
-          <div class="zone red-zone">
+  <div class="court-frame">
+    <div class="half half-left">
+      <div class="column back-column">
+        @for (pos of leftBackColumn; track pos) {
+          <div class="player-slot">
             @if (getCell(cellsA, pos); as cell) {
-              <div class="zone-pos">P{{ cell.position }}</div>
-              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
-              <div class="zone-name">{{ cell.label }}</div>
+              <div
+                class="jersey-shape"
+                [style.background]="teamAColor"
+                [style.color]="textColor(teamAColor)"
+                [attr.aria-label]="'Position ' + cell.position"
+              >
+                <div class="jersey-pos">P{{ cell.position }}</div>
+                <div class="jersey-number">#{{ cell.jersey_number }}</div>
+                <div class="jersey-name">{{ cell.label }}</div>
+              </div>
+            } @else {
+              <div class="jersey-empty">P{{ pos }}</div>
             }
           </div>
         }
       </div>
 
-      <div class="row">
-        @for (pos of leftBottomPositions; track pos) {
-          <div class="zone red-zone">
+      <div class="column front-column">
+        @for (pos of leftFrontColumn; track pos) {
+          <div class="player-slot">
             @if (getCell(cellsA, pos); as cell) {
-              <div class="zone-pos">P{{ cell.position }}</div>
-              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
-              <div class="zone-name">{{ cell.label }}</div>
+              <div
+                class="jersey-shape"
+                [style.background]="teamAColor"
+                [style.color]="textColor(teamAColor)"
+                [attr.aria-label]="'Position ' + cell.position"
+              >
+                <div class="jersey-pos">P{{ cell.position }}</div>
+                <div class="jersey-number">#{{ cell.jersey_number }}</div>
+                <div class="jersey-name">{{ cell.label }}</div>
+              </div>
+            } @else {
+              <div class="jersey-empty">P{{ pos }}</div>
             }
           </div>
         }
       </div>
     </div>
 
-    <div class="net"></div>
+    <div class="net">
+      <div class="net-band"></div>
+    </div>
 
-    <div class="half right-half">
-      <div class="row">
-        @for (pos of rightTopPositions; track pos) {
-          <div class="zone green-zone">
+    <div class="half half-right">
+      <div class="column front-column">
+        @for (pos of rightFrontColumn; track pos) {
+          <div class="player-slot">
             @if (getCell(cellsB, pos); as cell) {
-              <div class="zone-pos">P{{ cell.position }}</div>
-              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
-              <div class="zone-name">{{ cell.label }}</div>
+              <div
+                class="jersey-shape"
+                [style.background]="teamBColor"
+                [style.color]="textColor(teamBColor)"
+                [attr.aria-label]="'Position ' + cell.position"
+              >
+                <div class="jersey-pos">P{{ cell.position }}</div>
+                <div class="jersey-number">#{{ cell.jersey_number }}</div>
+                <div class="jersey-name">{{ cell.label }}</div>
+              </div>
+            } @else {
+              <div class="jersey-empty">P{{ pos }}</div>
             }
           </div>
         }
       </div>
 
-      <div class="row">
-        @for (pos of rightBottomPositions; track pos) {
-          <div class="zone green-zone">
+      <div class="column back-column">
+        @for (pos of rightBackColumn; track pos) {
+          <div class="player-slot">
             @if (getCell(cellsB, pos); as cell) {
-              <div class="zone-pos">P{{ cell.position }}</div>
-              <div class="zone-jersey">#{{ cell.jersey_number }}</div>
-              <div class="zone-name">{{ cell.label }}</div>
+              <div
+                class="jersey-shape"
+                [style.background]="teamBColor"
+                [style.color]="textColor(teamBColor)"
+                [attr.aria-label]="'Position ' + cell.position"
+              >
+                <div class="jersey-pos">P{{ cell.position }}</div>
+                <div class="jersey-number">#{{ cell.jersey_number }}</div>
+                <div class="jersey-name">{{ cell.label }}</div>
+              </div>
+            } @else {
+              <div class="jersey-empty">P{{ pos }}</div>
             }
           </div>
         }

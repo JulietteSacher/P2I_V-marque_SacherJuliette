@@ -1,137 +1,262 @@
-<div class="page">
+<div class="stats-shell">
   @if (loading) {
-    <div class="info-box">Chargement des statistiques...</div>
-  } @else if (error) {
-    <div class="error-box">{{ error }}</div>
+    <div class="loading-box">Chargement des statistiques du match...</div>
+  } @else if (pageError) {
+    <div class="error-box">{{ pageError }}</div>
   } @else {
-    <h1>Statistiques du match</h1>
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="app-badge">S</div>
+        <div>
+          <div class="app-title">Statistiques du match</div>
+          <div class="app-subtitle">Vue synthétique par équipe et par joueur</div>
+        </div>
+      </div>
+
+      <div class="topbar-center">
+        <div class="nav-pill active">Stats</div>
+        <div class="nav-pill">Match {{ matchId }}</div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="mini-pill">{{ teamA?.name }} vs {{ teamB?.name }}</div>
+      </div>
+    </div>
 
     <div class="teams-grid">
-      <div class="team-card">
-        <h2>{{ teamA?.name }}</h2>
+      <section class="team-card team-a-card">
+        <div class="team-card-header">
+          <div>
+            <div class="team-eyebrow">Équipe A</div>
+            <h2>{{ teamA?.name }}</h2>
+          </div>
+          <div class="team-badge">A</div>
+        </div>
 
+        <div class="hero-stats">
+          <div class="hero-stat large">
+            <span>Points marqués</span>
+            <strong>{{ statValue(statsA, ['total_points', 'points']) }}</strong>
+          </div>
+          <div class="hero-stat small negative">
+            <span>Fautes totales</span>
+            <strong>{{ statValue(statsA, ['total_faults']) }}</strong>
+          </div>
+        </div>
+
+        <div class="stats-section-title">Actions positives</div>
         <div class="stats-grid">
-          <div class="stat-box">
-            <span>Points équipe</span>
-            <strong>{{ statValue(statsA, ['points', 'total_points']) }}</strong>
+          <div class="stat-box positive">
+            <span>Points service</span>
+            <strong>{{ statValue(statsA, ['service_points', 'service_aces', 'aces']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Aces</span>
-            <strong>{{ statValue(statsA, ['aces', 'service_aces']) }}</strong>
+          <div class="stat-box positive">
+            <span>Points attaque</span>
+            <strong>{{ statValue(statsA, ['attack_points', 'attack_kills']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Fautes de service</span>
-            <strong>{{ statValue(statsA, ['service_errors']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Attaques gagnantes</span>
-            <strong>{{ statValue(statsA, ['attack_kills']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Fautes d’attaque</span>
-            <strong>{{ statValue(statsA, ['attack_errors']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Contres gagnants</span>
+          <div class="stat-box positive">
+            <span>Points contre</span>
             <strong>{{ statValue(statsA, ['block_points']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Fautes de contre</span>
-            <strong>{{ statValue(statsA, ['block_errors']) }}</strong>
+        </div>
+
+        <div class="stats-section-title">Fautes</div>
+        <div class="stats-grid">
+          <div class="stat-box negative">
+            <span>Fautes service</span>
+            <strong>{{ statValue(statsA, ['service_faults', 'service_errors']) }}</strong>
+          </div>
+          <div class="stat-box negative">
+            <span>Fautes attaque</span>
+            <strong>{{ statValue(statsA, ['attack_faults', 'attack_errors']) }}</strong>
+          </div>
+          <div class="stat-box negative">
+            <span>Fautes contre</span>
+            <strong>{{ statValue(statsA, ['block_faults', 'block_errors']) }}</strong>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div class="team-card">
-        <h2>{{ teamB?.name }}</h2>
+      <section class="team-card team-b-card">
+        <div class="team-card-header">
+          <div>
+            <div class="team-eyebrow">Équipe B</div>
+            <h2>{{ teamB?.name }}</h2>
+          </div>
+          <div class="team-badge">B</div>
+        </div>
 
+        <div class="hero-stats">
+          <div class="hero-stat large">
+            <span>Points marqués</span>
+            <strong>{{ statValue(statsB, ['total_points', 'points']) }}</strong>
+          </div>
+          <div class="hero-stat small negative">
+            <span>Fautes totales</span>
+            <strong>{{ statValue(statsB, ['total_faults']) }}</strong>
+          </div>
+        </div>
+
+        <div class="stats-section-title">Actions positives</div>
         <div class="stats-grid">
-          <div class="stat-box">
-            <span>Points équipe</span>
-            <strong>{{ statValue(statsB, ['points', 'total_points']) }}</strong>
+          <div class="stat-box positive">
+            <span>Points service</span>
+            <strong>{{ statValue(statsB, ['service_points', 'service_aces', 'aces']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Aces</span>
-            <strong>{{ statValue(statsB, ['aces', 'service_aces']) }}</strong>
+          <div class="stat-box positive">
+            <span>Points attaque</span>
+            <strong>{{ statValue(statsB, ['attack_points', 'attack_kills']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Fautes de service</span>
-            <strong>{{ statValue(statsB, ['service_errors']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Attaques gagnantes</span>
-            <strong>{{ statValue(statsB, ['attack_kills']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Fautes d’attaque</span>
-            <strong>{{ statValue(statsB, ['attack_errors']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Contres gagnants</span>
+          <div class="stat-box positive">
+            <span>Points contre</span>
             <strong>{{ statValue(statsB, ['block_points']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Fautes de contre</span>
-            <strong>{{ statValue(statsB, ['block_errors']) }}</strong>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <h2>Recherche joueur</h2>
-    <input
-      class="search-input"
-      [(ngModel)]="searchTerm"
-      (input)="searchPlayer()"
-      placeholder="Rechercher par nom, prénom ou numéro de maillot"
-    />
-
-    <div class="players-list">
-      @for (player of filteredPlayers; track player.id) {
-        <button class="player-card" (click)="loadPlayerStats(player)">
-          #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
-        </button>
-      }
-    </div>
-
-    @if (selectedPlayer && selectedPlayerStats) {
-      <div class="player-stats-card">
-        <h2>
-          Statistiques joueur :
-          #{{ selectedPlayer.jersey_number }} - {{ selectedPlayer.first_name }} {{ selectedPlayer.last_name }}
-        </h2>
-
+        <div class="stats-section-title">Fautes</div>
         <div class="stats-grid">
-          <div class="stat-box">
-            <span>Points</span>
-            <strong>{{ statValue(selectedPlayerStats, ['points', 'total_points']) }}</strong>
+          <div class="stat-box negative">
+            <span>Fautes service</span>
+            <strong>{{ statValue(statsB, ['service_faults', 'service_errors']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Aces</span>
-            <strong>{{ statValue(selectedPlayerStats, ['aces', 'service_aces']) }}</strong>
+          <div class="stat-box negative">
+            <span>Fautes attaque</span>
+            <strong>{{ statValue(statsB, ['attack_faults', 'attack_errors']) }}</strong>
           </div>
-          <div class="stat-box">
-            <span>Fautes de service</span>
-            <strong>{{ statValue(selectedPlayerStats, ['service_errors']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Attaques gagnantes</span>
-            <strong>{{ statValue(selectedPlayerStats, ['attack_kills']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Fautes d’attaque</span>
-            <strong>{{ statValue(selectedPlayerStats, ['attack_errors']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Contres gagnants</span>
-            <strong>{{ statValue(selectedPlayerStats, ['block_points']) }}</strong>
-          </div>
-          <div class="stat-box">
-            <span>Fautes de contre</span>
-            <strong>{{ statValue(selectedPlayerStats, ['block_errors']) }}</strong>
+          <div class="stat-box negative">
+            <span>Fautes contre</span>
+            <strong>{{ statValue(statsB, ['block_faults', 'block_errors']) }}</strong>
           </div>
         </div>
+      </section>
+    </div>
+
+    <section class="explorer-card">
+      <div class="section-header">
+        <div>
+          <div class="section-eyebrow">Recherche joueur</div>
+          <h2>Explorer les statistiques individuelles</h2>
+        </div>
+        <div class="count-pill">{{ filteredPlayers.length }} joueur(s)</div>
       </div>
+
+      <div class="search-row">
+        <input
+          class="search-input"
+          [(ngModel)]="searchTerm"
+          (input)="searchPlayer()"
+          placeholder="Rechercher par nom, prénom, numéro de maillot, poste ou équipe"
+        />
+      </div>
+
+      <div class="players-list">
+        @for (player of filteredPlayers; track player.id) {
+          <button
+            class="player-card"
+            [class.team-a]="isPlayerFromTeamA(player)"
+            [class.team-b]="!isPlayerFromTeamA(player)"
+            [class.active]="isSelectedPlayer(player)"
+            (click)="loadPlayerStats(player)"
+          >
+            <div class="player-card-top">
+              <div class="player-team-chip">{{ getPlayerTeamLabel(player) }}</div>
+              <div class="player-role">{{ player.role }}</div>
+            </div>
+
+            <div class="player-card-name">
+              #{{ player.jersey_number }} · {{ player.first_name }} {{ player.last_name }}
+            </div>
+
+            <div class="player-card-sub">{{ getPlayerTeamName(player) }}</div>
+          </button>
+        } @empty {
+          <div class="empty-state">Aucun joueur trouvé avec cette recherche.</div>
+        }
+      </div>
+    </section>
+
+    @if (!selectedPlayer) {
+      <section class="selected-player-card">
+        <div class="section-header">
+          <div>
+            <div class="section-eyebrow">Fiche joueur</div>
+            <h2>Sélectionne un joueur</h2>
+          </div>
+        </div>
+
+        <div class="empty-state">
+          Clique sur une carte joueur pour afficher ses statistiques individuelles.
+        </div>
+      </section>
+    } @else {
+      <section class="selected-player-card">
+        <div class="section-header player-header">
+          <div>
+            <div class="section-eyebrow">Fiche joueur</div>
+            <h2>
+              #{{ selectedPlayer.jersey_number }} ·
+              {{ selectedPlayer.first_name }} {{ selectedPlayer.last_name }}
+            </h2>
+          </div>
+
+          <div class="player-header-side">
+            <div
+              class="count-pill team-pill"
+              [class.team-a]="isPlayerFromTeamA(selectedPlayer)"
+              [class.team-b]="!isPlayerFromTeamA(selectedPlayer)"
+            >
+              {{ getPlayerTeamName(selectedPlayer) }}
+            </div>
+            <div class="count-pill">{{ selectedPlayer.role }}</div>
+            <button type="button" class="count-pill" (click)="clearSelectedPlayer()">Fermer</button>
+          </div>
+        </div>
+
+        @if (playerStatsLoading) {
+          <div class="loading-box">Chargement des statistiques du joueur...</div>
+        } @else if (playerError) {
+          <div class="error-box">{{ playerError }}</div>
+        } @else if (selectedPlayerStats) {
+          <div class="hero-stats player-hero-stats">
+            <div class="hero-stat large">
+              <span>Points du joueur</span>
+              <strong>{{ statValue(selectedPlayerStats, ['total_points', 'points']) }}</strong>
+            </div>
+            <div class="hero-stat small negative">
+              <span>Fautes du joueur</span>
+              <strong>{{ statValue(selectedPlayerStats, ['total_faults']) }}</strong>
+            </div>
+          </div>
+
+          <div class="stats-section-title">Détail des actions</div>
+          <div class="stats-grid player-stats-grid">
+            <div class="stat-box positive">
+              <span>Points service</span>
+              <strong>{{ statValue(selectedPlayerStats, ['service_points', 'service_aces', 'aces']) }}</strong>
+            </div>
+            <div class="stat-box negative">
+              <span>Fautes service</span>
+              <strong>{{ statValue(selectedPlayerStats, ['service_faults', 'service_errors']) }}</strong>
+            </div>
+            <div class="stat-box positive">
+              <span>Points attaque</span>
+              <strong>{{ statValue(selectedPlayerStats, ['attack_points', 'attack_kills']) }}</strong>
+            </div>
+            <div class="stat-box negative">
+              <span>Fautes attaque</span>
+              <strong>{{ statValue(selectedPlayerStats, ['attack_faults', 'attack_errors']) }}</strong>
+            </div>
+            <div class="stat-box positive">
+              <span>Points contre</span>
+              <strong>{{ statValue(selectedPlayerStats, ['block_points']) }}</strong>
+            </div>
+            <div class="stat-box negative">
+              <span>Fautes contre</span>
+              <strong>{{ statValue(selectedPlayerStats, ['block_faults', 'block_errors']) }}</strong>
+            </div>
+          </div>
+        }
+      </section>
     }
   }
 </div>

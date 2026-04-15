@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, switchMap } from 'rxjs';
+import { forkJoin, map, switchMap } from 'rxjs';
+import { Component, NgZone, inject } from '@angular/core';
 
 import { TeamsService } from '../../api/teams.service';
 import { PlayersService } from '../../api/players.service';
@@ -37,28 +38,67 @@ export class MatchSetupPageComponent {
   setsToWin = 2;
   servingSide: 'A' | 'B' = 'A';
 
-  teamAPlayers: SetupPlayer[] = Array.from({ length: 8 }, (_, i) => ({
-    first_name: '',
-    last_name: '',
-    jersey_number: i + 1,
-    role: 'R4',
-  }));
+  teamAColor = '#ef4444';
+  teamBColor = '#22c55e';
 
-  teamBPlayers: SetupPlayer[] = Array.from({ length: 8 }, (_, i) => ({
-    first_name: '',
-    last_name: '',
-    jersey_number: i + 1,
-    role: 'R4',
-  }));
+  roles = ['PASSEUR', 'POINTU', 'R4', 'CENTRAL', 'LIBERO'];
+
+  teamAPlayers: SetupPlayer[] = this.createEmptyPlayers();
+  teamBPlayers: SetupPlayer[] = this.createEmptyPlayers();
 
   lineupA = { p1: 1, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6 };
   lineupB = { p1: 1, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6 };
+
+  private createEmptyPlayers(): SetupPlayer[] {
+    return Array.from({ length: 8 }, (_, i) => ({
+      first_name: '',
+      last_name: '',
+      jersey_number: i + 1,
+      role: 'R4',
+    }));
+  }
+
+  private zone = inject(NgZone);
+
+  private runInZone(fn: () => void): void {
+    if (NgZone.isInAngularZone()) {
+      fn();
+      return;
+    }
+    this.zone.run(fn);
+  }
+
+  private resetForm(): void {
+    this.teamAName = '';
+    this.teamBName = '';
+    this.setsToWin = 2;
+    this.servingSide = 'A';
+    this.teamAColor = '#ef4444';
+    this.teamBColor = '#22c55e';
+    this.teamAPlayers = this.createEmptyPlayers();
+    this.teamBPlayers = this.createEmptyPlayers();
+    this.lineupA = { p1: 1, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6 };
+    this.lineupB = { p1: 1, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6 };
+  }
+
+  private clearLocalMatchState(): void {
+    localStorage.removeItem('currentMatchId');
+    localStorage.removeItem('teamAId');
+    localStorage.removeItem('teamBId');
+    localStorage.removeItem('teamAColor');
+    localStorage.removeItem('teamBColor');
+  }
+
+  private normalizeColor(value: string | null | undefined, fallback: string): string {
+    return /^#[0-9a-fA-F]{6}$/.test(value ?? '') ? String(value) : fallback;
+  }
 
   private isPlayerFilled(player: SetupPlayer): boolean {
     return (
       player.first_name.trim() !== '' &&
       player.last_name.trim() !== '' &&
-      player.role.trim() !== ''
+      player.role.trim() !== '' &&
+      Number(player.jersey_number) > 0
     );
   }
 
@@ -69,6 +109,36 @@ export class MatchSetupPageComponent {
   private hasDuplicateJersey(teamPlayers: SetupPlayer[]): boolean {
     const numbers = teamPlayers.map((p) => Number(p.jersey_number));
     return new Set(numbers).size !== numbers.length;
+  }
+
+  private buildHttpErrorMessage(err: HttpErrorResponse): string {
+    const detail = err?.error?.detail;
+
+    if (err.status === 0) {
+      return 'Backend inaccessible : vérifie que FastAPI est lancé sur http://127.0.0.1:8000';
+    }
+
+    if (
+      err.status === 400 &&
+      typeof detail === 'string' &&
+      detail.includes('existe déjà')
+    ) {
+      return 'Une équipe avec ce nom existe déjà. La base n’a peut-être pas été vidée correctement.';
+    }
+
+    if (Array.isArray(detail)) {
+      return detail.map((e: { msg?: string }) => e.msg || 'Erreur').join(' | ');
+    }
+
+    if (typeof detail === 'string' && detail.trim() !== '') {
+      return detail;
+    }
+
+    if (err.message) {
+      return err.message;
+    }
+
+    return 'Erreur lors de la requête.';
   }
 
   validateForm(): boolean {
@@ -99,22 +169,27 @@ export class MatchSetupPageComponent {
     }
 
     const lineupAValues = [
-      this.lineupA.p1,
-      this.lineupA.p2,
-      this.lineupA.p3,
-      this.lineupA.p4,
-      this.lineupA.p5,
-      this.lineupA.p6,
+      Number(this.lineupA.p1),
+      Number(this.lineupA.p2),
+      Number(this.lineupA.p3),
+      Number(this.lineupA.p4),
+      Number(this.lineupA.p5),
+      Number(this.lineupA.p6),
     ];
 
     const lineupBValues = [
-      this.lineupB.p1,
-      this.lineupB.p2,
-      this.lineupB.p3,
-      this.lineupB.p4,
-      this.lineupB.p5,
-      this.lineupB.p6,
+      Number(this.lineupB.p1),
+      Number(this.lineupB.p2),
+      Number(this.lineupB.p3),
+      Number(this.lineupB.p4),
+      Number(this.lineupB.p5),
+      Number(this.lineupB.p6),
     ];
+
+    if (lineupAValues.some((n) => !n || n <= 0) || lineupBValues.some((n) => !n || n <= 0)) {
+      this.error = 'Les positions initiales doivent toutes être renseignées avec des numéros valides.';
+      return false;
+    }
 
     if (new Set(lineupAValues).size !== 6) {
       this.error = 'Le lineup de l’équipe A contient des doublons.';
@@ -129,8 +204,8 @@ export class MatchSetupPageComponent {
     const jerseyA = filledA.map((p) => Number(p.jersey_number));
     const jerseyB = filledB.map((p) => Number(p.jersey_number));
 
-    const lineupAValid = lineupAValues.every((n) => jerseyA.includes(Number(n)));
-    const lineupBValid = lineupBValues.every((n) => jerseyB.includes(Number(n)));
+    const lineupAValid = lineupAValues.every((n) => jerseyA.includes(n));
+    const lineupBValid = lineupBValues.every((n) => jerseyB.includes(n));
 
     if (!lineupAValid) {
       this.error =
@@ -155,128 +230,92 @@ export class MatchSetupPageComponent {
     this.loading = true;
     this.error = '';
     this.success = '';
+    this.clearLocalMatchState();
+
+    this.teamAColor = this.normalizeColor(this.teamAColor, '#ef4444');
+    this.teamBColor = this.normalizeColor(this.teamBColor, '#22c55e');
 
     const filledA = this.getFilledPlayers(this.teamAPlayers);
     const filledB = this.getFilledPlayers(this.teamBPlayers);
 
-    this.teamsService.createTeam({ name: this.teamAName.trim() }).pipe(
-      switchMap((teamA) =>
-        this.teamsService.createTeam({ name: this.teamBName.trim() }).pipe(
-          switchMap((teamB) =>
-            forkJoin([
-              ...filledA.map((p: SetupPlayer) =>
-                this.playersService.createPlayer(teamA.id, p)
-              ),
-              ...filledB.map((p: SetupPlayer) =>
-                this.playersService.createPlayer(teamB.id, p)
-              ),
-            ]).pipe(
-              switchMap(() =>
-                this.matchesService.createMatch({
-                  team_a_id: teamA.id,
-                  team_b_id: teamB.id,
-                  sets_to_win: this.setsToWin,
-                })
-              ),
-              switchMap((match) =>
-                this.matchesService.startMatch(match.id).pipe(
-                  switchMap(() =>
-                    forkJoin([
-                      this.matchesService.setInitialLineup(match.id, teamA.id, this.lineupA),
-                      this.matchesService.setInitialLineup(match.id, teamB.id, this.lineupB),
-                    ]).pipe(
-                      switchMap(() =>
-                        this.matchesService.setServingTeam(match.id, {
-                          team_id: this.servingSide === 'A' ? teamA.id : teamB.id,
-                        })
-                      ),
-                      switchMap(() => {
-                        localStorage.setItem('currentMatchId', String(match.id));
-                        localStorage.setItem('teamAId', String(teamA.id));
-                        localStorage.setItem('teamBId', String(teamB.id));
-                        return this.matchesService.getMatch(match.id);
-                      })
-                    )
-                  )
-                )
-              )
-            )
+    this.matchesService
+      .resetAll()
+      .pipe(
+        switchMap(() => this.teamsService.createTeam({ name: this.teamAName.trim() })),
+        switchMap((teamA) =>
+          this.teamsService.createTeam({ name: this.teamBName.trim() }).pipe(
+            map((teamB) => ({ teamA, teamB }))
           )
+        ),
+        switchMap(({ teamA, teamB }) =>
+          forkJoin([
+            ...filledA.map((p) => this.playersService.createPlayer(teamA.id, p)),
+            ...filledB.map((p) => this.playersService.createPlayer(teamB.id, p)),
+          ]).pipe(map(() => ({ teamA, teamB })))
+        ),
+        switchMap(({ teamA, teamB }) =>
+          this.matchesService.createMatch({
+            team_a_id: teamA.id,
+            team_b_id: teamB.id,
+            sets_to_win: this.setsToWin,
+          }).pipe(map((match) => ({ teamA, teamB, match })))
+        ),
+        switchMap(({ teamA, teamB, match }) =>
+          this.matchesService.startMatch(match.id).pipe(map(() => ({ teamA, teamB, match })))
+        ),
+        switchMap(({ teamA, teamB, match }) =>
+          forkJoin([
+            this.matchesService.setInitialLineup(match.id, teamA.id, this.lineupA),
+            this.matchesService.setInitialLineup(match.id, teamB.id, this.lineupB),
+          ]).pipe(map(() => ({ teamA, teamB, match })))
+        ),
+        switchMap(({ teamA, teamB, match }) =>
+          this.matchesService.setServingTeam(match.id, {
+            team_id: this.servingSide === 'A' ? teamA.id : teamB.id,
+          }).pipe(map(() => ({ teamA, teamB, match })))
         )
       )
-    ).subscribe({
-      next: (match) => {
-        this.loading = false;
-        this.success = 'Match créé avec succès.';
-        this.router.navigate(['/match', match.id]);
-      },
-      error: (err) => {
-        console.error(err);
+      .subscribe({
+        next: ({ teamA, teamB, match }) =>
+          this.runInZone(() => {
+            localStorage.setItem('currentMatchId', String(match.id));
+            localStorage.setItem('teamAId', String(teamA.id));
+            localStorage.setItem('teamBId', String(teamB.id));
+            localStorage.setItem('teamAColor', this.teamAColor);
+            localStorage.setItem('teamBColor', this.teamBColor);
 
-        if (err?.error?.detail) {
-          if (Array.isArray(err.error.detail)) {
-            this.error = err.error.detail.map((e: { msg: string }) => e.msg).join(' | ');
-          } else {
-            this.error = String(err.error.detail);
-          }
-        } else if (err?.message) {
-          this.error = err.message;
-        } else {
-          this.error = 'Erreur lors de la création du match.';
-        }
-
-        this.loading = false;
-      },
-    });
+            this.loading = false;
+            this.success = 'Match créé avec succès.';
+            void this.router.navigate(['/match', match.id], { replaceUrl: true });
+          }),
+        error: (err: HttpErrorResponse) =>
+          this.runInZone(() => {
+            console.error(err);
+            this.error = this.buildHttpErrorMessage(err);
+            this.loading = false;
+          }),
+      });
   }
-  newMatch(): void {
-    const currentMatchId = Number(localStorage.getItem('currentMatchId') || 0);
 
+  newMatch(): void {
+    this.loading = true;
     this.error = '';
     this.success = '';
 
-    if (!currentMatchId) {
-      localStorage.removeItem('currentMatchId');
-      localStorage.removeItem('teamAId');
-      localStorage.removeItem('teamBId');
-      this.success = 'Nouveau match prêt.';
-      return;
-    }
-
-    this.matchesService.deleteMatch(currentMatchId).subscribe({
-      next: () => {
-        localStorage.removeItem('currentMatchId');
-        localStorage.removeItem('teamAId');
-        localStorage.removeItem('teamBId');
-
-        this.teamAName = '';
-        this.teamBName = '';
-        this.setsToWin = 2;
-        this.servingSide = 'A';
-
-        this.teamAPlayers = Array.from({ length: 8 }, (_, i) => ({
-          first_name: '',
-          last_name: '',
-          jersey_number: i + 1,
-          role: 'R4',
-        }));
-
-        this.teamBPlayers = Array.from({ length: 8 }, (_, i) => ({
-          first_name: '',
-          last_name: '',
-          jersey_number: i + 1,
-          role: 'R4',
-        }));
-
-        this.lineupA = { p1: 1, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6 };
-        this.lineupB = { p1: 1, p2: 2, p3: 3, p4: 4, p5: 5, p6: 6 };
-
-        this.success = 'Le match en cours a été supprimé. Tu peux en créer un nouveau.';
-      },
-      error: (err) => {
-        console.error(err);
-        this.error = err?.error?.detail || 'Impossible de supprimer le match en cours.';
-      },
+    this.matchesService.resetAll().subscribe({
+      next: () =>
+        this.runInZone(() => {
+          this.clearLocalMatchState();
+          this.resetForm();
+          this.success = 'Toutes les données ont été supprimées. Tu peux créer un nouveau match.';
+          this.loading = false;
+        }),
+      error: (err: HttpErrorResponse) =>
+        this.runInZone(() => {
+          console.error(err);
+          this.error = this.buildHttpErrorMessage(err);
+          this.loading = false;
+        }),
     });
   }
 }

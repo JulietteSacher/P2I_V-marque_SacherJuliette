@@ -1,16 +1,65 @@
 <div class="scoreboard">
-  <div class="team" [class.serving]="servingTeamId === teamAId">
-    <div class="team-name">{{ teamAName }}</div>
+  <div
+    class="team-panel"
+    [class.serving]="isServing('A')"
+    [style.--team-color]="teamAColor"
+    [style.--team-text]="teamTextColor('A')"
+  >
+    <div class="team-header">
+      <div class="team-name">{{ teamAName }}</div>
+      @if (isServing('A')) {
+        <div class="serve-indicator">Service</div>
+      }
+    </div>
+
+    <div class="team-meta">
+      <span class="sets-chip">Sets {{ teamASetsWon }}</span>
+    </div>
+
     <div class="team-score">{{ scoreA }}</div>
   </div>
 
-  <div class="middle">
-    <div class="set-label">Set {{ setNumber }}</div>
-    <div class="vs">VS</div>
+  <div class="center-panel">
+    <div class="center-top">Set {{ setNumber }}</div>
+    <div class="center-status">{{ matchStatus }}</div>
+
+    @if (finishedSets.length > 0) {
+      <div class="finished-sets">
+        @for (setItem of finishedSets; track setItem.set_number) {
+          <div
+            class="finished-set-chip"
+            [class.team-a-win]="isSetWonByTeamA(setItem)"
+            [class.team-b-win]="isSetWonByTeamB(setItem)"
+          >
+            S{{ setItem.set_number }} {{ setItem.score_team_a }}-{{ setItem.score_team_b }}
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="empty-finished-sets">Aucun set terminé</div>
+    }
+
+    <div class="center-separator"></div>
+    <div class="center-bottom">V-Marque Volley</div>
   </div>
 
-  <div class="team" [class.serving]="servingTeamId === teamBId">
-    <div class="team-name">{{ teamBName }}</div>
+  <div
+    class="team-panel"
+    [class.serving]="isServing('B')"
+    [style.--team-color]="teamBColor"
+    [style.--team-text]="teamTextColor('B')"
+  >
+    <div class="team-header">
+      <div class="team-name">{{ teamBName }}</div>
+      @if (isServing('B')) {
+        <div class="serve-indicator">Service</div>
+      }
+    </div>
+
+    <div class="team-meta">
+      <span class="sets-chip">Sets {{ teamBSetsWon }}</span>
+    </div>
+
     <div class="team-score">{{ scoreB }}</div>
   </div>
 </div>

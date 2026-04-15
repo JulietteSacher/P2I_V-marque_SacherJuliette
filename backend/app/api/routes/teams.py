@@ -10,15 +10,16 @@ router = APIRouter(prefix="/teams", tags=["teams"])
 
 @router.post("", response_model=TeamRead, status_code=status.HTTP_201_CREATED)
 def create_team(payload: TeamCreate, db: Session = Depends(get_db)):
-    # Vérifie unicité du nom (car unique=True en DB, mais on veut un message propre)
-    existing = db.query(Team).filter(Team.name == payload.name).first()
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Une équipe avec ce nom existe déjà."
-        )
+    name = payload.name.strip()
 
-    team = Team(name=payload.name)
+    if not name:
+        raise HTTPException(status_code=400, detail="Le nom de l’équipe est obligatoire.")
+
+    existing = db.query(Team).filter(Team.name == name).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Une équipe avec ce nom existe déjà.")
+
+    team = Team(name=name)
     db.add(team)
     db.commit()
     db.refresh(team)

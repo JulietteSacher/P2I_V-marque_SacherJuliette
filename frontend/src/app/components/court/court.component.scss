@@ -1,140 +1,235 @@
-.volley-wrapper {
-  width: 100%;
+:host {
+  display: block;
+  height: 100%;
 }
 
-.court-header {
+.court-shell {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.court-topbar {
   display: grid;
-  grid-template-columns: 1fr 120px 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
   align-items: center;
-  margin-bottom: 12px;
 }
 
-.team-chip,
-.net-label {
-  min-height: 38px;
+.team-chip {
+  min-height: 28px;
   border-radius: 999px;
-  display: grid;
-  place-items: center;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 800;
-}
-
-.team-chip.red {
-  background: rgba(198, 40, 40, 0.12);
-  color: #a61b1b;
-  border: 1px solid rgba(198, 40, 40, 0.28);
-}
-
-.team-chip.green {
-  background: rgba(46, 125, 50, 0.12);
-  color: #25672a;
-  border: 1px solid rgba(46, 125, 50, 0.28);
+  font-size: 0.78rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
 }
 
 .net-label {
-  background: #e2e8f0;
-  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.volley-court {
+.court-frame {
+  flex: 1;
+  min-height: 0;
+  border-radius: 16px;
+  padding: 6px;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(15, 23, 42, 0.2) 49.6%,
+      rgba(255, 255, 255, 0.1) 49.6%,
+      rgba(255, 255, 255, 0.1) 50.4%,
+      rgba(15, 23, 42, 0.2) 50.4%
+    ),
+    linear-gradient(180deg, #f4b66d 0%, #dfa15d 100%);
+  border: 5px solid #d08b49;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.28),
+    0 8px 18px rgba(0, 0, 0, 0.16);
   display: grid;
-  grid-template-columns: 1fr 16px 1fr;
-  gap: 14px;
-  align-items: stretch;
-  background: linear-gradient(180deg, #d8d8d8 0%, #cfcfcf 100%);
-  border: 4px solid #ffffff;
-  border-radius: 20px;
-  padding: 16px;
-  min-height: 420px;
+  grid-template-columns: 1fr 14px 1fr;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.court-frame::before,
+.court-frame::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.court-frame::after {
+  inset: 6px calc(50% - 1px) 6px calc(50% - 1px);
+  width: 0;
+  border-left: 2px solid rgba(255, 255, 255, 0.72);
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+  border-radius: 0;
 }
 
 .half {
+  min-height: 0;
   display: grid;
-  grid-template-rows: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  align-items: stretch;
 }
 
-.row {
+.column {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 6px;
 }
 
-.zone {
-  border-radius: 16px;
-  min-height: 170px;
-  padding: 12px;
+.player-slot {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  border: 3px solid rgba(255, 255, 255, 0.95);
+  justify-content: center;
+  min-height: 0;
+}
+
+.jersey-shape,
+.jersey-empty {
+  width: min(100%, 76px);
+  aspect-ratio: 0.86 / 1;
+  border-radius: 10px;
+  padding: 4px 4px 6px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
   text-align: center;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
-.red-zone {
-  background: linear-gradient(180deg, rgba(198, 40, 40, 0.92), rgba(173, 31, 31, 0.92));
-  color: white;
+.jersey-shape {
+  clip-path: polygon(
+    18% 0,
+    35% 0,
+    42% 12%,
+    58% 12%,
+    65% 0,
+    82% 0,
+    100% 20%,
+    88% 35%,
+    88% 100%,
+    12% 100%,
+    12% 35%,
+    0 20%
+  );
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.16);
+  border: 2px solid rgba(255, 255, 255, 0.68);
 }
 
-.green-zone {
-  background: linear-gradient(180deg, rgba(46, 125, 50, 0.92), rgba(37, 103, 42, 0.92));
-  color: white;
-}
-
-.zone-pos {
-  font-size: 0.82rem;
+.jersey-empty {
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.84);
   font-weight: 800;
-  opacity: 0.95;
-  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.66rem;
 }
 
-.zone-jersey {
-  font-size: 1.7rem;
+.jersey-pos {
+  font-size: 0.52rem;
   font-weight: 900;
-  line-height: 1.1;
-  margin-bottom: 8px;
+  opacity: 0.9;
 }
 
-.zone-name {
-  font-size: 0.88rem;
-  max-width: 110px;
+.jersey-number {
+  margin-top: 1px;
+  font-size: 0.82rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.jersey-name {
+  margin-top: 2px;
+  font-size: 0.52rem;
+  font-weight: 800;
+  max-width: 52px;
+  line-height: 1;
   word-break: break-word;
 }
 
 .net {
-  border-radius: 12px;
-  background:
-    repeating-linear-gradient(
-      to bottom,
-      #334155 0px,
-      #334155 8px,
-      #e2e8f0 8px,
-      #e2e8f0 16px
-    );
-  box-shadow: inset 0 0 0 2px #64748b;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  position: relative;
 }
 
-@media (max-width: 1200px) {
-  .volley-court {
+.net::before {
+  content: '';
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+.net-band {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  width: 8px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92) 0 3px,
+    rgba(255, 255, 255, 0.32) 3px 6px
+  );
+  opacity: 0.65;
+}
+
+@media (max-width: 1100px) {
+  .court-frame {
     grid-template-columns: 1fr;
-    min-height: auto;
   }
 
   .net {
-    min-height: 18px;
-    background:
-      repeating-linear-gradient(
-        to right,
-        #334155 0px,
-        #334155 8px,
-        #e2e8f0 8px,
-        #e2e8f0 16px
-      );
+    display: none;
   }
 
-  .court-header {
-    grid-template-columns: 1fr;
+  .court-frame::after {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .half {
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+  }
+
+  .column {
+    gap: 5px;
+  }
+
+  .jersey-shape,
+  .jersey-empty {
+    width: 100%;
+    max-width: 68px;
+  }
+
+  .jersey-number {
+    font-size: 0.76rem;
+  }
+
+  .jersey-name {
+    font-size: 0.5rem;
+    max-width: 48px;
   }
 }

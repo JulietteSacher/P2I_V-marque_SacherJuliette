@@ -1,97 +1,196 @@
-<div class="page">
-  <h1>Feuille de match</h1>
+<div class="setup-page">
+  <div class="setup-shell">
+    <header class="hero-card">
+      <div class="hero-text">
+        <span class="eyebrow">V-Marque Volley</span>
+        <h1>Feuille de match</h1>
+        <p>
+          Prépare le match, choisis la couleur des équipes, définis les positions
+          initiales et lance la rencontre.
+        </p>
+      </div>
 
-  <div class="buttons-row">
-  
+      <div class="hero-actions">
+        <button type="button" class="secondary-btn" (click)="newMatch()" [disabled]="loading">
+          Nouveau match
+        </button>
 
-  <button type="button" class="secondary-btn" (click)="newMatch()" [disabled]="loading">
-    Nouveau match
-  </button>
+        <button type="button" class="primary-btn" (click)="createMatchFlow()" [disabled]="loading">
+          {{ loading ? 'Création...' : 'Créer le match' }}
+        </button>
+      </div>
+    </header>
 
-</div>
-  <div class="block">
-    <label>Nom équipe A</label>
-    <input [(ngModel)]="teamAName" />
-  </div>
+    @if (error) {
+      <div class="alert error-alert">
+        {{ error }}
+      </div>
+    }
 
-  <div class="block">
-    <label>Nom équipe B</label>
-    <input [(ngModel)]="teamBName" />
-  </div>
+    @if (success) {
+      <div class="alert success-alert">
+        {{ success }}
+      </div>
+    }
 
-  <div class="block">
-    <label>Sets à gagner</label>
-    <select [(ngModel)]="setsToWin">
-      <option [ngValue]="2">2</option>
-      <option [ngValue]="3">3</option>
-    </select>
-  </div>
+    <section class="config-card">
+      <div class="section-title">
+        <h2>Configuration du match</h2>
+      </div>
 
-  <div class="block">
-    <label>Équipe au service au départ</label>
-    <select [(ngModel)]="servingSide">
-      <option value="A">Équipe A</option>
-      <option value="B">Équipe B</option>
-    </select>
-  </div>
+      <div class="config-grid">
+        <div class="field">
+          <label for="teamAName">Nom équipe A</label>
+          <input id="teamAName" [(ngModel)]="teamAName" placeholder="Ex : Bordeaux" />
+        </div>
 
-  <h2>Joueurs équipe A</h2>
-  @for (player of teamAPlayers; track $index) {
-    <div class="row">
-      <input placeholder="Prénom" [(ngModel)]="player.first_name" />
-      <input placeholder="Nom" [(ngModel)]="player.last_name" />
-      <input type="number" placeholder="Maillot" [(ngModel)]="player.jersey_number" />
-      <select [(ngModel)]="player.role">
-        <option value="PASSEUR">PASSEUR</option>
-        <option value="POINTU">POINTU</option>
-        <option value="R4">R4</option>
-        <option value="CENTRAL">CENTRAL</option>
-        <option value="LIBERO">LIBERO</option>
-      </select>
+        <div class="field">
+          <label for="teamBName">Nom équipe B</label>
+          <input id="teamBName" [(ngModel)]="teamBName" placeholder="Ex : Toulouse" />
+        </div>
+
+        <div class="field">
+          <label for="setsToWin">Sets à gagner</label>
+          <select id="setsToWin" [(ngModel)]="setsToWin">
+            <option [ngValue]="2">2</option>
+            <option [ngValue]="3">3</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="servingSide">Équipe au service au départ</label>
+          <select id="servingSide" [(ngModel)]="servingSide">
+            <option value="A">Équipe A</option>
+            <option value="B">Équipe B</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="colors-grid">
+        <div class="color-card">
+          <div class="color-header">
+            <span class="color-pill" [style.background]="teamAColor"></span>
+            <div>
+              <h3>Couleur équipe A</h3>
+              <p>Utilisée sur le tableau de score, les cartes et le terrain.</p>
+            </div>
+          </div>
+          <div class="color-picker-row">
+            <input type="color" [(ngModel)]="teamAColor" aria-label="Couleur équipe A" />
+            <span>{{ teamAColor }}</span>
+          </div>
+        </div>
+
+        <div class="color-card">
+          <div class="color-header">
+            <span class="color-pill" [style.background]="teamBColor"></span>
+            <div>
+              <h3>Couleur équipe B</h3>
+              <p>Utilisée sur le tableau de score, les cartes et le terrain.</p>
+            </div>
+          </div>
+          <div class="color-picker-row">
+            <input type="color" [(ngModel)]="teamBColor" aria-label="Couleur équipe B" />
+            <span>{{ teamBColor }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="teams-grid">
+      <div class="team-card team-a">
+        <div class="team-card-header">
+          <div>
+            <span class="team-badge">Équipe A</span>
+            <h2>{{ teamAName || 'Équipe A' }}</h2>
+          </div>
+          <span class="team-color-preview" [style.background]="teamAColor"></span>
+        </div>
+
+        <div class="players-table">
+          <div class="players-head">
+            <span>Prénom</span>
+            <span>Nom</span>
+            <span>Maillot</span>
+            <span>Rôle</span>
+          </div>
+
+          @for (player of teamAPlayers; track $index) {
+            <div class="player-row">
+              <input placeholder="Prénom" [(ngModel)]="player.first_name" />
+              <input placeholder="Nom" [(ngModel)]="player.last_name" />
+              <input type="number" placeholder="N°" [(ngModel)]="player.jersey_number" />
+              <select [(ngModel)]="player.role">
+                @for (role of roles; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+
+        <div class="lineup-block">
+          <h3>Position initiale</h3>
+          <div class="lineup-grid">
+            <div class="lineup-field"><label>P1</label><input type="number" [(ngModel)]="lineupA.p1" /></div>
+            <div class="lineup-field"><label>P2</label><input type="number" [(ngModel)]="lineupA.p2" /></div>
+            <div class="lineup-field"><label>P3</label><input type="number" [(ngModel)]="lineupA.p3" /></div>
+            <div class="lineup-field"><label>P4</label><input type="number" [(ngModel)]="lineupA.p4" /></div>
+            <div class="lineup-field"><label>P5</label><input type="number" [(ngModel)]="lineupA.p5" /></div>
+            <div class="lineup-field"><label>P6</label><input type="number" [(ngModel)]="lineupA.p6" /></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="team-card team-b">
+        <div class="team-card-header">
+          <div>
+            <span class="team-badge">Équipe B</span>
+            <h2>{{ teamBName || 'Équipe B' }}</h2>
+          </div>
+          <span class="team-color-preview" [style.background]="teamBColor"></span>
+        </div>
+
+        <div class="players-table">
+          <div class="players-head">
+            <span>Prénom</span>
+            <span>Nom</span>
+            <span>Maillot</span>
+            <span>Rôle</span>
+          </div>
+
+          @for (player of teamBPlayers; track $index) {
+            <div class="player-row">
+              <input placeholder="Prénom" [(ngModel)]="player.first_name" />
+              <input placeholder="Nom" [(ngModel)]="player.last_name" />
+              <input type="number" placeholder="N°" [(ngModel)]="player.jersey_number" />
+              <select [(ngModel)]="player.role">
+                @for (role of roles; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+            </div>
+          }
+        </div>
+
+        <div class="lineup-block">
+          <h3>Position initiale</h3>
+          <div class="lineup-grid">
+            <div class="lineup-field"><label>P1</label><input type="number" [(ngModel)]="lineupB.p1" /></div>
+            <div class="lineup-field"><label>P2</label><input type="number" [(ngModel)]="lineupB.p2" /></div>
+            <div class="lineup-field"><label>P3</label><input type="number" [(ngModel)]="lineupB.p3" /></div>
+            <div class="lineup-field"><label>P4</label><input type="number" [(ngModel)]="lineupB.p4" /></div>
+            <div class="lineup-field"><label>P5</label><input type="number" [(ngModel)]="lineupB.p5" /></div>
+            <div class="lineup-field"><label>P6</label><input type="number" [(ngModel)]="lineupB.p6" /></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="bottom-actions">
+      <button type="button" class="primary-btn large-btn" (click)="createMatchFlow()" [disabled]="loading">
+        {{ loading ? 'Création du match...' : 'Créer le match' }}
+      </button>
     </div>
-  }
-
-  <h2>Joueurs équipe B</h2>
-  @for (player of teamBPlayers; track $index) {
-    <div class="row">
-      <input placeholder="Prénom" [(ngModel)]="player.first_name" />
-      <input placeholder="Nom" [(ngModel)]="player.last_name" />
-      <input type="number" placeholder="Maillot" [(ngModel)]="player.jersey_number" />
-      <select [(ngModel)]="player.role">
-        <option value="PASSEUR">PASSEUR</option>
-        <option value="POINTU">POINTU</option>
-        <option value="R4">R4</option>
-        <option value="CENTRAL">CENTRAL</option>
-        <option value="LIBERO">LIBERO</option>
-      </select>
-    </div>
-  }
-
-  <h2>Position initiale équipe A</h2>
-  <div class="row">
-    <input type="number" [(ngModel)]="lineupA.p1" placeholder="P1" />
-    <input type="number" [(ngModel)]="lineupA.p2" placeholder="P2" />
-    <input type="number" [(ngModel)]="lineupA.p3" placeholder="P3" />
-    <input type="number" [(ngModel)]="lineupA.p4" placeholder="P4" />
-    <input type="number" [(ngModel)]="lineupA.p5" placeholder="P5" />
-    <input type="number" [(ngModel)]="lineupA.p6" placeholder="P6" />
   </div>
-
-  <h2>Position initiale équipe B</h2>
-  <div class="row">
-    <input type="number" [(ngModel)]="lineupB.p1" placeholder="P1" />
-    <input type="number" [(ngModel)]="lineupB.p2" placeholder="P2" />
-    <input type="number" [(ngModel)]="lineupB.p3" placeholder="P3" />
-    <input type="number" [(ngModel)]="lineupB.p4" placeholder="P4" />
-    <input type="number" [(ngModel)]="lineupB.p5" placeholder="P5" />
-    <input type="number" [(ngModel)]="lineupB.p6" placeholder="P6" />
-  </div>
-
-  <button (click)="createMatchFlow()" [disabled]="loading">
-    {{ loading ? 'Création...' : 'Créer le match' }}
-  </button>
-
-  @if (error) {
-    <p class="error">{{ error }}</p>
-  }
 </div>

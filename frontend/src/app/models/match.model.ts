@@ -13,6 +13,14 @@ export interface SetRead {
   score_team_b: number;
   status: string;
   serving_team_id?: number | null;
+  starting_team_id?: number | null;
+}
+
+export interface FinishedSetRead {
+  set_number: number;
+  score_team_a: number;
+  score_team_b: number;
+  winner_team_id?: number | null;
 }
 
 export interface TeamRead {
@@ -51,6 +59,9 @@ export interface MatchLiveRead {
   team_b: TeamRead;
   court_a: CourtView;
   court_b: CourtView;
+  team_a_sets_won: number;
+  team_b_sets_won: number;
+  finished_sets: FinishedSetRead[];
 }
 
 export interface MatchCreatePayload {

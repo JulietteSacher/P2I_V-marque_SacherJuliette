@@ -30,20 +30,101 @@ export class MatchesService {
     return this.http.post<MatchRead>(`${this.baseUrl}/matches/${matchId}/start`, {});
   }
 
-  setInitialLineup(matchId: number, teamId: number, payload: LineupCreatePayload): Observable<any> {
-    return this.http.post(`${this.baseUrl}/lineup/matches/${matchId}/teams/${teamId}`, payload);
+  setInitialLineup(
+    matchId: number,
+    teamId: number,
+    payload: LineupCreatePayload
+  ): Observable<{ status: string; match_id: number; team_id: number }> {
+    return this.http.post<{ status: string; match_id: number; team_id: number }>(
+      `${this.baseUrl}/lineup/matches/${matchId}/teams/${teamId}`,
+      payload
+    );
   }
 
-  setServingTeam(matchId: number, payload: ServeStartPayload): Observable<any> {
-    return this.http.post(`${this.baseUrl}/matches/${matchId}/serve`, payload);
+  setServingTeam(
+    matchId: number,
+    payload: ServeStartPayload
+  ): Observable<{
+    match_id: number;
+    set_id: number;
+    set_number: number;
+    set_status: string;
+    serving_team_id: number | null;
+    starting_team_id?: number | null;
+  }> {
+    return this.http.post<{
+      match_id: number;
+      set_id: number;
+      set_number: number;
+      set_status: string;
+      serving_team_id: number | null;
+      starting_team_id?: number | null;
+    }>(`${this.baseUrl}/matches/${matchId}/serve`, payload);
   }
 
-  swapPlayers(matchId: number, teamId: number, payload: SwapPlayerPayload): Observable<any> {
-    return this.http.post(`${this.baseUrl}/lineup/matches/${matchId}/teams/${teamId}/swap`, payload);
+  startNextSet(matchId: number): Observable<{
+    match_id: number;
+    set_id: number;
+    set_number: number;
+    set_status: string;
+    serving_team_id: number | null;
+    starting_team_id?: number | null;
+  }> {
+    return this.http.post<{
+      match_id: number;
+      set_id: number;
+      set_number: number;
+      set_status: string;
+      serving_team_id: number | null;
+      starting_team_id?: number | null;
+    }>(`${this.baseUrl}/matches/${matchId}/next-set`, {});
+  }
+
+  swapPlayers(
+    matchId: number,
+    teamId: number,
+    payload: SwapPlayerPayload
+  ): Observable<{
+    status: string;
+    match_id: number;
+    team_id: number;
+    player_out_id: number;
+    player_in_id: number;
+    position: number;
+  }> {
+    return this.http.post<{
+      status: string;
+      match_id: number;
+      team_id: number;
+      player_out_id: number;
+      player_in_id: number;
+      position: number;
+    }>(`${this.baseUrl}/lineup/matches/${matchId}/teams/${teamId}/swap`, payload);
   }
 
   addAction(matchId: number, payload: ActionCreatePayload): Observable<any> {
     return this.http.post(`${this.baseUrl}/matches/${matchId}/actions`, payload);
+  }
+
+  addPoint(
+    matchId: number,
+    payload: { side: 'A' | 'B' }
+  ): Observable<{
+    match_id: number;
+    set_number: number;
+    score_team_a: number;
+    score_team_b: number;
+    set_status: string;
+    serving_team_id: number | null;
+  }> {
+    return this.http.post<{
+      match_id: number;
+      set_number: number;
+      score_team_a: number;
+      score_team_b: number;
+      set_status: string;
+      serving_team_id: number | null;
+    }>(`${this.baseUrl}/matches/${matchId}/point`, payload);
   }
 
   getMatch(matchId: number): Observable<MatchRead> {
@@ -74,8 +155,12 @@ export class MatchesService {
     return this.http.get<PlayerStats>(`${this.baseUrl}/matches/${matchId}/players/${playerId}/stats`);
   }
 
-  deleteMatch(matchId: number) {
-    return this.http.delete(`${this.baseUrl}/matches/${matchId}`);
+  deleteMatch(matchId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/matches/${matchId}`);
+  }
+
+  resetAll(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/matches/reset-all`);
   }
 
   getMatchLiveData(matchId: number, teamAId: number, teamBId: number) {
@@ -88,4 +173,3 @@ export class MatchesService {
     });
   }
 }
-

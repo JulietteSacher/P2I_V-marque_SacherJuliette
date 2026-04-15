@@ -1,130 +1,266 @@
-<div class="page">
-  @if (loading) {
-    <div class="info-box">Chargement du match...</div>
-  } @else if (error) {
-    <div class="error-box">{{ error }}</div>
-  } @else if (match && currentSet && teamA && teamB && courtA && courtB) {
-    <div class="score-section">
-      <div class="score-team">{{ teamA.name }} : {{ currentSet.score_team_a }}</div>
-      <div class="score-center">Set {{ currentSet.set_number }}</div>
-      <div class="score-team">{{ teamB.name }} : {{ currentSet.score_team_b }}</div>
+<div class="match-page">
+  @if (!hasLoadedOnce && loading) {
+    <div class="state-card loading-card">
+      <div class="spinner"></div>
+      <div class="state-title">{{ loadingMessage }}</div>
+      <p>Le front attend que le match, les compositions et le terrain soient entièrement disponibles.</p>
     </div>
+  } @else if (!hasLoadedOnce && fatalError) {
+    <div class="state-card error-card">
+      <div class="state-title">Impossible d’afficher le match</div>
+      <p>{{ fatalError }}</p>
+      <button class="ghost-btn" (click)="refresh()">Réessayer</button>
+    </div>
+  } @else if (match && currentSet && teamA && teamB && courtA && courtB) {
+    <div class="match-shell">
+      @if (inlineError) {
+        <section class="section-card" style="border:1px solid rgba(239,68,68,.35); background:rgba(127,29,29,.28);">
+          {{ inlineError }}
+        </section>
+      }
 
-    <button class="refresh-btn" (click)="refresh()">Actualiser</button>
+      <app-scoreboard
+        [teamAName]="teamA.name"
+        [teamBName]="teamB.name"
+        [scoreA]="currentSet.score_team_a"
+        [scoreB]="currentSet.score_team_b"
+        [setNumber]="currentSet.set_number"
+        [servingTeamId]="currentSet.serving_team_id"
+        [teamAId]="teamA.id"
+        [teamBId]="teamB.id"
+        [teamAColor]="teamAColor"
+        [teamBColor]="teamBColor"
+        [matchStatus]="match.status"
+        [teamASetsWon]="teamASetsWon"
+        [teamBSetsWon]="teamBSetsWon"
+        [finishedSets]="finishedSets"
+      />
 
-    <div class="main-grid">
-      <aside class="team-panel">
-        <h2>{{ teamA.name }}</h2>
-
-        <h3>Joueurs sur le terrain</h3>
-        @for (cell of courtA.cells; track cell.position) {
-          <div class="player-row">
-            <div>P{{ cell.position }} - #{{ cell.jersey_number }} - {{ cell.label }}</div>
-
-            @if (getPlayerByJersey('A', cell.jersey_number); as player) {
-              <div class="actions">
-                <button (click)="addAction(player.id, 'SERVICE_ACE')">Ace</button>
-                <button (click)="addAction(player.id, 'SERVICE_ERROR')">Faute service</button>
-                <button (click)="addAction(player.id, 'ATTACK_KILL')">Attaque +</button>
-                <button (click)="addAction(player.id, 'ATTACK_ERROR')">Attaque -</button>
-                <button (click)="addAction(player.id, 'BLOCK_POINT')">Contre +</button>
-                <button (click)="addAction(player.id, 'BLOCK_ERROR')">Contre -</button>
-              </div>
-            }
+      @if (nextSetPending && showNextSetPrompt) {
+        <section class="state-card loading-card">
+          <div class="state-title">{{ lastWinnerName }} a gagné le set {{ lastFinishedSet?.set_number }}</div>
+          <p>Lancer le set {{ currentSet.set_number }} ? Le service sera attribué automatiquement.</p>
+          <div class="swap-grid" style="max-width: 360px; margin: 12px auto 0;">
+            <button class="primary-btn" (click)="startNextSet()" [disabled]="startingNextSet">
+              {{ startingNextSet ? 'Lancement...' : 'Oui, lancer le set' }}
+            </button>
+            <button class="ghost-btn" (click)="hideNextSetPrompt()" [disabled]="startingNextSet">
+              Retour
+            </button>
           </div>
-        }
+        </section>
+      }
 
-        <h3>Joueurs en attente</h3>
-        @for (player of benchA; track player.id) {
-          <div class="bench-row">
-            #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
+      @if (nextSetPending && !showNextSetPrompt) {
+        <section class="section-card" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+          <div>
+            <div class="panel-kicker">Set suivant</div>
+            <div style="margin-top:4px; color:#f8fafc; font-weight:800;">
+              {{ lastWinnerName }} a gagné le set {{ lastFinishedSet?.set_number }}
+            </div>
           </div>
-        }
 
-        <h3>Changement</h3>
-        <select [(ngModel)]="selectedOutA">
-          <option [ngValue]="undefined">Joueur sortant</option>
-          @for (cell of courtA.cells; track cell.position) {
-            @if (getPlayerByJersey('A', cell.jersey_number); as player) {
-              <option [ngValue]="player.id">
-                #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
-              </option>
-            }
-          }
-        </select>
+          <button class="primary-btn" (click)="startNextSet()" [disabled]="startingNextSet">
+            {{ startingNextSet ? 'Lancement...' : 'Lancer le set ' + currentSet.set_number }}
+          </button>
+        </section>
+      }
 
-        <select [(ngModel)]="selectedInA">
-          <option [ngValue]="undefined">Joueur entrant</option>
-          @for (player of benchA; track player.id) {
-            <option [ngValue]="player.id">
-              #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
-            </option>
-          }
-        </select>
-
-        <button (click)="swapA()">Valider changement</button>
-      </aside>
-
-      <section class="court-zone">
-        <app-court
-          [teamAName]="teamA.name"
-          [teamBName]="teamB.name"
-          [cellsA]="courtA.cells"
-          [cellsB]="courtB.cells"
-        />
-      </section>
-
-      <aside class="team-panel">
-        <h2>{{ teamB.name }}</h2>
-
-        <h3>Joueurs sur le terrain</h3>
-        @for (cell of courtB.cells; track cell.position) {
-          <div class="player-row">
-            <div>P{{ cell.position }} - #{{ cell.jersey_number }} - {{ cell.label }}</div>
-
-            @if (getPlayerByJersey('B', cell.jersey_number); as player) {
-              <div class="actions">
-                <button (click)="addAction(player.id, 'SERVICE_ACE')">Ace</button>
-                <button (click)="addAction(player.id, 'SERVICE_ERROR')">Faute service</button>
-                <button (click)="addAction(player.id, 'ATTACK_KILL')">Attaque +</button>
-                <button (click)="addAction(player.id, 'ATTACK_ERROR')">Attaque -</button>
-                <button (click)="addAction(player.id, 'BLOCK_POINT')">Contre +</button>
-                <button (click)="addAction(player.id, 'BLOCK_ERROR')">Contre -</button>
-              </div>
-            }
+      <div class="live-layout">
+        <aside class="team-panel team-a">
+          <div class="panel-title-row">
+            <div>
+              <span class="panel-kicker">Équipe A</span>
+              <h2>{{ teamA.name }}</h2>
+            </div>
+            <span class="team-dot" [style.background]="teamAColor"></span>
           </div>
-        }
 
-        <h3>Joueurs en attente</h3>
-        @for (player of benchB; track player.id) {
-          <div class="bench-row">
-            #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
+          <section class="section-card">
+            <div class="section-head">
+              <h3>Joueurs sur le terrain</h3>
+              <span>{{ orderedCourtA.length }}</span>
+            </div>
+
+            <div class="players-grid">
+              @for (cell of orderedCourtA; track cell.position) {
+                <article class="live-player-card team-a-card">
+                  <div class="player-topline">
+                    <span class="position-pill">P{{ cell.position }}</span>
+                    <span class="jersey-pill">#{{ cell.jersey_number }}</span>
+                  </div>
+
+                  <div class="player-name">{{ cell.label }}</div>
+
+                  @if (getPlayerByJersey('A', cell.jersey_number); as player) {
+                    <div class="action-grid">
+                      <button class="action-btn plus" (click)="addAction(player.id, 'SERVICE_ACE')">Ace</button>
+                      <button class="action-btn minus" (click)="addAction(player.id, 'SERVICE_ERROR')">Srv -</button>
+                      <button class="action-btn plus" (click)="addAction(player.id, 'ATTACK_KILL')">Atk +</button>
+                      <button class="action-btn minus" (click)="addAction(player.id, 'ATTACK_ERROR')">Atk -</button>
+                      <button class="action-btn plus" (click)="addAction(player.id, 'BLOCK_POINT')">Blk +</button>
+                      <button class="action-btn minus" (click)="addAction(player.id, 'BLOCK_ERROR')">Blk -</button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+
+          <section class="section-card compact-section">
+            <div class="section-head">
+              <h3>Banc</h3>
+              <span>{{ benchA.length }}</span>
+            </div>
+
+            <div class="bench-chips">
+              @for (player of benchA; track player.id) {
+                <div class="bench-chip">
+                  #{{ player.jersey_number }} {{ player.first_name }} {{ player.last_name }}
+                </div>
+              }
+            </div>
+          </section>
+
+          <section class="section-card compact-section">
+            <div class="section-head">
+              <h3>Changement</h3>
+            </div>
+
+            <div class="swap-grid">
+              <select [(ngModel)]="selectedOutA">
+                <option [ngValue]="undefined">Joueur sortant</option>
+                @for (cell of orderedCourtA; track cell.position) {
+                  @if (getPlayerByJersey('A', cell.jersey_number); as player) {
+                    <option [ngValue]="player.id">
+                      #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
+                    </option>
+                  }
+                }
+              </select>
+
+              <select [(ngModel)]="selectedInA">
+                <option [ngValue]="undefined">Joueur entrant</option>
+                @for (player of benchA; track player.id) {
+                  <option [ngValue]="player.id">
+                    #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
+                  </option>
+                }
+              </select>
+
+              <button class="primary-btn" (click)="swapA()">Valider</button>
+            </div>
+          </section>
+        </aside>
+
+        <section class="court-card">
+          <div class="court-card-header">
+            <div>
+              <span class="panel-kicker">Terrain</span>
+              <h2>Disposition en jeu</h2>
+            </div>
+
+            <button class="ghost-btn" (click)="refresh()">
+              {{ refreshing ? 'Actualisation...' : 'Actualiser' }}
+            </button>
           </div>
-        }
 
-        <h3>Changement</h3>
-        <select [(ngModel)]="selectedOutB">
-          <option [ngValue]="undefined">Joueur sortant</option>
-          @for (cell of courtB.cells; track cell.position) {
-            @if (getPlayerByJersey('B', cell.jersey_number); as player) {
-              <option [ngValue]="player.id">
-                #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
-              </option>
-            }
-          }
-        </select>
+          <app-court
+            [teamAName]="teamA.name"
+            [teamBName]="teamB.name"
+            [cellsA]="courtA.cells"
+            [cellsB]="courtB.cells"
+            [teamAColor]="teamAColor"
+            [teamBColor]="teamBColor"
+          />
+        </section>
 
-        <select [(ngModel)]="selectedInB">
-          <option [ngValue]="undefined">Joueur entrant</option>
-          @for (player of benchB; track player.id) {
-            <option [ngValue]="player.id">
-              #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
-            </option>
-          }
-        </select>
+        <aside class="team-panel team-b">
+          <div class="panel-title-row">
+            <div>
+              <span class="panel-kicker">Équipe B</span>
+              <h2>{{ teamB.name }}</h2>
+            </div>
+            <span class="team-dot" [style.background]="teamBColor"></span>
+          </div>
 
-        <button (click)="swapB()">Valider changement</button>
-      </aside>
+          <section class="section-card">
+            <div class="section-head">
+              <h3>Joueurs sur le terrain</h3>
+              <span>{{ orderedCourtB.length }}</span>
+            </div>
+
+            <div class="players-grid">
+              @for (cell of orderedCourtB; track cell.position) {
+                <article class="live-player-card team-b-card">
+                  <div class="player-topline">
+                    <span class="position-pill">P{{ cell.position }}</span>
+                    <span class="jersey-pill">#{{ cell.jersey_number }}</span>
+                  </div>
+
+                  <div class="player-name">{{ cell.label }}</div>
+
+                  @if (getPlayerByJersey('B', cell.jersey_number); as player) {
+                    <div class="action-grid">
+                      <button class="action-btn plus" (click)="addAction(player.id, 'SERVICE_ACE')">Ace</button>
+                      <button class="action-btn minus" (click)="addAction(player.id, 'SERVICE_ERROR')">Srv -</button>
+                      <button class="action-btn plus" (click)="addAction(player.id, 'ATTACK_KILL')">Atk +</button>
+                      <button class="action-btn minus" (click)="addAction(player.id, 'ATTACK_ERROR')">Atk -</button>
+                      <button class="action-btn plus" (click)="addAction(player.id, 'BLOCK_POINT')">Blk +</button>
+                      <button class="action-btn minus" (click)="addAction(player.id, 'BLOCK_ERROR')">Blk -</button>
+                    </div>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+
+          <section class="section-card compact-section">
+            <div class="section-head">
+              <h3>Banc</h3>
+              <span>{{ benchB.length }}</span>
+            </div>
+
+            <div class="bench-chips">
+              @for (player of benchB; track player.id) {
+                <div class="bench-chip">
+                  #{{ player.jersey_number }} {{ player.first_name }} {{ player.last_name }}
+                </div>
+              }
+            </div>
+          </section>
+
+          <section class="section-card compact-section">
+            <div class="section-head">
+              <h3>Changement</h3>
+            </div>
+
+            <div class="swap-grid">
+              <select [(ngModel)]="selectedOutB">
+                <option [ngValue]="undefined">Joueur sortant</option>
+                @for (cell of orderedCourtB; track cell.position) {
+                  @if (getPlayerByJersey('B', cell.jersey_number); as player) {
+                    <option [ngValue]="player.id">
+                      #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
+                    </option>
+                  }
+                }
+              </select>
+
+              <select [(ngModel)]="selectedInB">
+                <option [ngValue]="undefined">Joueur entrant</option>
+                @for (player of benchB; track player.id) {
+                  <option [ngValue]="player.id">
+                    #{{ player.jersey_number }} - {{ player.first_name }} {{ player.last_name }}
+                  </option>
+                }
+              </select>
+
+              <button class="primary-btn" (click)="swapB()">Valider</button>
+            </div>
+          </section>
+        </aside>
+      </div>
     </div>
   }
 </div>

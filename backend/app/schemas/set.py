@@ -10,3 +10,12 @@ class SetRead(BaseModel):
     score_team_a: int
     score_team_b: int
     status: SetStatus
+    serving_team_id: int | None = None
+    starting_team_id: int | None = None
+
+
+class FinishedSetRead(BaseModel):
+    set_number: int
+    score_team_a: int
+    score_team_b: int
+    winner_team_id: int | None = None
