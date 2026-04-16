@@ -20,19 +20,19 @@
       }
 
       <app-scoreboard
-        [teamAName]="teamA.name"
-        [teamBName]="teamB.name"
-        [scoreA]="currentSet.score_team_a"
-        [scoreB]="currentSet.score_team_b"
+        [teamAName]="isSidesSwapped ? teamB.name : teamA.name"
+        [teamBName]="isSidesSwapped ? teamA.name : teamB.name"
+        [scoreA]="isSidesSwapped ? currentSet.score_team_b : currentSet.score_team_a"
+        [scoreB]="isSidesSwapped ? currentSet.score_team_a : currentSet.score_team_b"
         [setNumber]="currentSet.set_number"
         [servingTeamId]="currentSet.serving_team_id"
-        [teamAId]="teamA.id"
-        [teamBId]="teamB.id"
-        [teamAColor]="teamAColor"
-        [teamBColor]="teamBColor"
+        [teamAId]="isSidesSwapped ? teamB.id : teamA.id"
+        [teamBId]="isSidesSwapped ? teamA.id : teamB.id"
+        [teamAColor]="isSidesSwapped ? teamBColor : teamAColor"
+        [teamBColor]="isSidesSwapped ? teamAColor : teamBColor"
         [matchStatus]="match.status"
-        [teamASetsWon]="teamASetsWon"
-        [teamBSetsWon]="teamBSetsWon"
+        [teamASetsWon]="isSidesSwapped ? teamBSetsWon : teamASetsWon"
+        [teamBSetsWon]="isSidesSwapped ? teamASetsWon : teamBSetsWon"
         [finishedSets]="finishedSets"
       />
 
@@ -82,7 +82,7 @@
       }
 
       <div class="live-layout">
-        <aside class="team-panel team-a">
+        <aside class="team-panel team-a" [style.order]="isSidesSwapped ? 3 : 1">
           <div class="panel-title-row">
             <div>
               <span class="panel-kicker">Équipe A</span>
@@ -105,7 +105,7 @@
                     <span class="jersey-pill">#{{ cell.jersey_number }}</span>
                   </div>
 
-                  <div class="player-name">{{ cell.label }}</div>
+                  <div class="player-name">{{ getPlayerFullName('A', cell.jersey_number) }}</div>
 
                   @if (getPlayerByJersey('A', cell.jersey_number); as player) {
                     <div class="action-grid">
@@ -168,7 +168,7 @@
           </section>
         </aside>
 
-        <section class="court-card">
+        <section class="court-card" [style.order]="2">
           <div class="court-card-header">
             <div>
               <span class="panel-kicker">Terrain</span>
@@ -181,16 +181,16 @@
           </div>
 
           <app-court
-            [teamAName]="teamA.name"
-            [teamBName]="teamB.name"
-            [cellsA]="courtA.cells"
-            [cellsB]="courtB.cells"
-            [teamAColor]="teamAColor"
-            [teamBColor]="teamBColor"
+            [teamAName]="isSidesSwapped ? teamB.name : teamA.name"
+            [teamBName]="isSidesSwapped ? teamA.name : teamB.name"
+            [cellsA]="isSidesSwapped ? courtB.cells : courtA.cells"
+            [cellsB]="isSidesSwapped ? courtA.cells : courtB.cells"
+            [teamAColor]="isSidesSwapped ? teamBColor : teamAColor"
+            [teamBColor]="isSidesSwapped ? teamAColor : teamBColor"
           />
         </section>
 
-        <aside class="team-panel team-b">
+        <aside class="team-panel team-b" [style.order]="isSidesSwapped ? 1 : 3">
           <div class="panel-title-row">
             <div>
               <span class="panel-kicker">Équipe B</span>
@@ -213,7 +213,7 @@
                     <span class="jersey-pill">#{{ cell.jersey_number }}</span>
                   </div>
 
-                  <div class="player-name">{{ cell.label }}</div>
+                  <div class="player-name">{{ getPlayerFullName('B', cell.jersey_number) }}</div>
 
                   @if (getPlayerByJersey('B', cell.jersey_number); as player) {
                     <div class="action-grid">

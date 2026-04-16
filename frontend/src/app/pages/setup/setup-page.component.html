@@ -98,10 +98,14 @@
     </section>
 
     <section class="teams-grid">
-      <div class="team-card team-a">
+      <div
+        class="team-card team-a"
+        [style.border]="'2px solid ' + teamAColor"
+        [style.boxShadow]="'0 0 0 4px ' + teamAColor + '22 inset'"
+      >
         <div class="team-card-header">
           <div>
-            <span class="team-badge">Équipe A</span>
+            <span class="team-badge" [style.background]="teamAColor" [style.borderColor]="teamAColor">Équipe A</span>
             <h2>{{ teamAName || 'Équipe A' }}</h2>
           </div>
           <span class="team-color-preview" [style.background]="teamAColor"></span>
@@ -142,10 +146,10 @@
         </div>
       </div>
 
-      <div class="team-card team-b">
+      <div class="team-card team-b" [style.border]="'2px solid ' + teamBColor" [style.boxShadow]="'0 0 0 4px ' + teamBColor + '22 inset'">
         <div class="team-card-header">
           <div>
-            <span class="team-badge">Équipe B</span>
+            <span class="team-badge" [style.background]="teamBColor" [style.borderColor]="teamBColor">Équipe B</span>
             <h2>{{ teamBName || 'Équipe B' }}</h2>
           </div>
           <span class="team-color-preview" [style.background]="teamBColor"></span>

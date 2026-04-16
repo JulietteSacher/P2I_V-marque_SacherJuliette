@@ -707,7 +707,7 @@ def get_match_live(match_id: int, db: Session = Depends(get_db)):
                     x=x,
                     y=y,
                     position=lp.position,
-                    label=f"{player.first_name} {player.last_name}",
+                    label=f"{player.first_name}",
                     jersey_number=player.jersey_number,
                 )
             )

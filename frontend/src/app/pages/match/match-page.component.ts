@@ -566,6 +566,20 @@ export class MatchLivePageComponent implements OnInit {
     return this.isDecidingSet ? 15 : 25;
   }
 
+  get isSidesSwapped(): boolean {
+    return !!this.currentSet && this.currentSet.set_number % 2 === 0;
+  }
+
+  getPlayerFullName(team: 'A' | 'B', jersey: number): string {
+    const player = this.getPlayerByJersey(team, jersey);
+
+    if (!player) {
+      return `#${jersey}`;
+    }
+
+    return `${player.first_name} ${player.last_name}`.trim();
+  }
+
   refresh(): void {
     if (this.actionPending || this.startingNextSet) {
       return;
