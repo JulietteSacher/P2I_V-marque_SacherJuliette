@@ -530,6 +530,42 @@ export class MatchLivePageComponent implements OnInit {
     return source.find((player) => player.jersey_number === jersey);
   }
 
+  get isMatchFinished(): boolean {
+  return this.match?.status === 'finished';
+}
+
+  get matchWinnerName(): string {
+    if (!this.teamA || !this.teamB) {
+      return 'Une équipe';
+    }
+
+    if (this.teamASetsWon > this.teamBSetsWon) {
+      return this.teamA.name;
+    }
+
+    if (this.teamBSetsWon > this.teamASetsWon) {
+      return this.teamB.name;
+    }
+
+    return 'Égalité impossible';
+  }
+
+  get matchScoreSummary(): string {
+    return `${this.teamASetsWon} - ${this.teamBSetsWon}`;
+  }
+
+  get isDecidingSet(): boolean {
+    if (!this.match || !this.currentSet) {
+      return false;
+    }
+
+    return this.currentSet.set_number === 2 * this.match.sets_to_win - 1;
+  }
+
+  get currentSetTargetPoints(): number {
+    return this.isDecidingSet ? 15 : 25;
+  }
+
   refresh(): void {
     if (this.actionPending || this.startingNextSet) {
       return;

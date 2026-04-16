@@ -152,7 +152,12 @@ def _award_point_and_maybe_finish_set(db: Session, match: Match, current_set: Se
     else:
         current_set.score_team_b += 1
 
-    if not is_set_won(current_set.score_team_a, current_set.score_team_b, current_set.set_number):
+    if not is_set_won(
+        current_set.score_team_a,
+        current_set.score_team_b,
+        current_set.set_number,
+        match.sets_to_win,
+    ):
         return
 
     current_set.status = SetStatus.finished

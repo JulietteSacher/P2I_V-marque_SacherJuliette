@@ -36,6 +36,21 @@
         [finishedSets]="finishedSets"
       />
 
+      @if (isMatchFinished) {
+      <section class="state-card loading-card">
+        <div class="state-title">{{ matchWinnerName }} a gagné le match</div>
+        <p>
+          Score final en sets : {{ teamA.name }} {{ teamASetsWon }} - {{ teamBSetsWon }} {{ teamB.name }}
+        </p>
+
+        @if (lastFinishedSet) {
+          <p>
+            Dernier set : {{ lastFinishedSet.score_team_a }} - {{ lastFinishedSet.score_team_b }}
+          </p>
+        }
+      </section>
+    }
+
       @if (nextSetPending && showNextSetPrompt) {
         <section class="state-card loading-card">
           <div class="state-title">{{ lastWinnerName }} a gagné le set {{ lastFinishedSet?.set_number }}</div>
