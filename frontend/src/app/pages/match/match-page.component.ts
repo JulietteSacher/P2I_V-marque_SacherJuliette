@@ -570,6 +570,18 @@ export class MatchLivePageComponent implements OnInit {
     return !!this.currentSet && this.currentSet.set_number % 2 === 0;
   }
 
+  get displayFinishedSets(): FinishedSetRead[] {
+    if (!this.isSidesSwapped) {
+      return this.finishedSets;
+    }
+
+    return this.finishedSets.map((setItem) => ({
+      ...setItem,
+      score_team_a: setItem.score_team_b,
+      score_team_b: setItem.score_team_a,
+    }));
+  }
+
   getPlayerFullName(team: 'A' | 'B', jersey: number): string {
     const player = this.getPlayerByJersey(team, jersey);
 
@@ -578,6 +590,10 @@ export class MatchLivePageComponent implements OnInit {
     }
 
     return `${player.first_name} ${player.last_name}`.trim();
+  }
+
+  withAlpha(color: string, alpha = '20'): string {
+    return /^#[0-9a-fA-F]{6}$/.test(color) ? `${color}${alpha}` : color;
   }
 
   refresh(): void {

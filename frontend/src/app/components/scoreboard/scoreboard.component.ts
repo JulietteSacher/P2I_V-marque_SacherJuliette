@@ -1,9 +1,11 @@
 import { Component, Input } from '@angular/core';
 import { FinishedSetRead } from '../../models/match.model';
+import { NgStyle } from '@angular/common';
 
 @Component({
   selector: 'app-scoreboard',
   standalone: true,
+  imports: [NgStyle],
   templateUrl: './scoreboard.component.html',
   styleUrl: './scoreboard.component.scss',
 })
@@ -53,5 +55,29 @@ export class ScoreboardComponent {
 
   isSetWonByTeamB(setItem: FinishedSetRead): boolean {
     return !!this.teamBId && setItem.winner_team_id === this.teamBId;
+  }
+
+  getSetChipStyle(setItem: FinishedSetRead): Record<string, string> {
+    if (this.isSetWonByTeamA(setItem)) {
+      return {
+        background: `${this.teamAColor}22`,
+        border: `1px solid ${this.teamAColor}66`,
+        color: this.teamTextColor('A'),
+      };
+    }
+
+    if (this.isSetWonByTeamB(setItem)) {
+      return {
+        background: `${this.teamBColor}22`,
+        border: `1px solid ${this.teamBColor}66`,
+        color: this.teamTextColor('B'),
+      };
+    }
+
+    return {
+      background: 'rgba(148, 163, 184, 0.18)',
+      border: '1px solid rgba(148, 163, 184, 0.28)',
+      color: '#f8fafc',
+    };
   }
 }

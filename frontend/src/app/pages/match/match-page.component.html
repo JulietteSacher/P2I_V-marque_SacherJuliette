@@ -33,7 +33,7 @@
         [matchStatus]="match.status"
         [teamASetsWon]="isSidesSwapped ? teamBSetsWon : teamASetsWon"
         [teamBSetsWon]="isSidesSwapped ? teamASetsWon : teamBSetsWon"
-        [finishedSets]="finishedSets"
+        [finishedSets]="displayFinishedSets"
       />
 
       @if (isMatchFinished) {
@@ -85,7 +85,6 @@
         <aside class="team-panel team-a" [style.order]="isSidesSwapped ? 3 : 1">
           <div class="panel-title-row">
             <div>
-              <span class="panel-kicker">Équipe A</span>
               <h2>{{ teamA.name }}</h2>
             </div>
             <span class="team-dot" [style.background]="teamAColor"></span>
@@ -99,7 +98,7 @@
 
             <div class="players-grid">
               @for (cell of orderedCourtA; track cell.position) {
-                <article class="live-player-card team-a-card">
+                <article class="live-player-card team-a-card" [style.background]="withAlpha(teamAColor, '18')" [style.border]="'1px solid ' + withAlpha(teamAColor, '40')">
                   <div class="player-topline">
                     <span class="position-pill">P{{ cell.position }}</span>
                     <span class="jersey-pill">#{{ cell.jersey_number }}</span>
@@ -169,17 +168,6 @@
         </aside>
 
         <section class="court-card" [style.order]="2">
-          <div class="court-card-header">
-            <div>
-              <span class="panel-kicker">Terrain</span>
-              <h2>Disposition en jeu</h2>
-            </div>
-
-            <button class="ghost-btn" (click)="refresh()">
-              {{ refreshing ? 'Actualisation...' : 'Actualiser' }}
-            </button>
-          </div>
-
           <app-court
             [teamAName]="isSidesSwapped ? teamB.name : teamA.name"
             [teamBName]="isSidesSwapped ? teamA.name : teamB.name"
@@ -193,7 +181,6 @@
         <aside class="team-panel team-b" [style.order]="isSidesSwapped ? 1 : 3">
           <div class="panel-title-row">
             <div>
-              <span class="panel-kicker">Équipe B</span>
               <h2>{{ teamB.name }}</h2>
             </div>
             <span class="team-dot" [style.background]="teamBColor"></span>
@@ -207,7 +194,7 @@
 
             <div class="players-grid">
               @for (cell of orderedCourtB; track cell.position) {
-                <article class="live-player-card team-b-card">
+                <article class="live-player-card team-b-card" [style.background]="withAlpha(teamBColor, '18')" [style.border]="'1px solid ' + withAlpha(teamBColor, '40')">
                   <div class="player-topline">
                     <span class="position-pill">P{{ cell.position }}</span>
                     <span class="jersey-pill">#{{ cell.jersey_number }}</span>

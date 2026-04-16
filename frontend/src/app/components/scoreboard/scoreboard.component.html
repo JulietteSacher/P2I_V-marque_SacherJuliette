@@ -28,8 +28,7 @@
         @for (setItem of finishedSets; track setItem.set_number) {
           <div
             class="finished-set-chip"
-            [class.team-a-win]="isSetWonByTeamA(setItem)"
-            [class.team-b-win]="isSetWonByTeamB(setItem)"
+            [ngStyle]="getSetChipStyle(setItem)"
           >
             S{{ setItem.set_number }} {{ setItem.score_team_a }}-{{ setItem.score_team_b }}
           </div>

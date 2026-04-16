@@ -13,28 +13,28 @@
 
 .match-page {
   height: calc(100vh - 72px);
-  padding: 8px 10px 10px;
+  padding: 8px 16px 5px;
   overflow: hidden;
 }
 
 .match-shell {
-  width: min(1460px, 100%);
+  width: min(1680px, 100%);
   height: 100%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-height: 0;
 }
 
-/* On agrandit les panneaux latéraux et on réduit un peu le centre */
 .live-layout {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(340px, 400px) minmax(240px, 0.58fr) minmax(340px, 400px);
-  gap: 10px;
+  grid-template-columns: minmax(320px, 380px) minmax(0px, 1fr) minmax(320px, 380px);
+  gap: 16px;
   align-items: stretch;
+  justify-content: center;
 }
 
 .team-panel,
@@ -131,14 +131,12 @@
   color: #cbd5e1;
 }
 
-/* On enlève la logique qui forçait la section joueurs à tout prendre */
 .team-panel > .section-card:first-of-type {
   flex: 0 0 auto;
   display: block;
   min-height: 0;
 }
 
-/* Les cartes joueurs deviennent larges : 1 colonne */
 .players-grid {
   margin-top: 8px;
   display: grid;
@@ -280,15 +278,14 @@ select:focus {
   border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
-/* Centre */
 .court-card {
   padding: 10px;
   display: flex;
   flex-direction: column;
   min-height: 0;
   height: 100%;
-  max-width: 520px;
   width: 100%;
+  max-width: 100%;
   justify-self: center;
   overflow: hidden;
 }
@@ -297,6 +294,16 @@ select:focus {
   flex: 1;
   min-height: 0;
   margin-top: 6px;
+  display: block;
+}
+
+.centered-header {
+  justify-content: center;
+}
+
+.centered-header .panel-kicker {
+  display: block;
+  text-align: center;
 }
 
 .state-card {
@@ -344,11 +351,7 @@ select:focus {
 
 @media (max-width: 1360px) {
   .live-layout {
-    grid-template-columns: minmax(300px, 360px) minmax(220px, 0.54fr) minmax(300px, 360px);
-  }
-
-  .court-card {
-    max-width: 480px;
+    grid-template-columns: minmax(300px, 340px) minmax(520px, 1fr) minmax(300px, 340px);
   }
 }
 
@@ -373,6 +376,7 @@ select:focus {
   }
 
   .team-panel {
+    height: auto;
     overflow: visible;
   }
 
@@ -384,6 +388,14 @@ select:focus {
 }
 
 @media (max-width: 760px) {
+  .match-page {
+    padding: 8px 10px 16px;
+  }
+
+  .live-layout {
+    gap: 12px;
+  }
+
   .players-grid {
     grid-template-columns: 1fr;
   }

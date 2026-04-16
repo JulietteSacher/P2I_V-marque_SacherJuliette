@@ -106,10 +106,10 @@
 
 .jersey-shape,
 .jersey-empty {
-  width: min(100%, 76px);
+  width: min(100%, 68px);
   aspect-ratio: 0.86 / 1;
-  border-radius: 10px;
-  padding: 4px 4px 6px;
+  border-radius: 9px;
+  padding: 3px 3px 5px;
   display: grid;
   align-content: center;
   justify-items: center;
@@ -144,21 +144,21 @@
 }
 
 .jersey-pos {
-  font-size: 0.52rem;
+  font-size: 0.70rem;
   font-weight: 900;
   opacity: 0.9;
 }
 
 .jersey-number {
   margin-top: 1px;
-  font-size: 0.82rem;
+  font-size: 1rem;
   line-height: 1;
   font-weight: 900;
 }
 
 .jersey-name {
   margin-top: 2px;
-  font-size: 0.52rem;
+  font-size: 0.70rem;
   font-weight: 800;
   max-width: 52px;
   line-height: 1;

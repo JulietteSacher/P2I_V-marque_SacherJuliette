@@ -11,7 +11,7 @@
 
 .team-panel,
 .center-panel {
-  min-height: 96px;
+  min-height: 70px;
   border-radius: 18px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
@@ -25,10 +25,8 @@
       color-mix(in srgb, var(--team-color) 22%, #0f172a) 0%,
       rgba(15, 23, 42, 0.96) 100%
     );
-  padding: 10px 14px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  padding: 18px 24px;
+  display: block;
   color: #f8fafc;
   position: relative;
   overflow: hidden;
@@ -52,11 +50,15 @@
 .team-header,
 .team-meta {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.team-meta {
+  margin-top: 10px;
 }
 
 .team-name {
@@ -81,11 +83,17 @@
 }
 
 .team-score {
-  position: relative;
-  z-index: 1;
-  font-size: clamp(2rem, 4vw, 2.8rem);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-size: clamp(3.4rem, 5vw, 4.6rem);
   line-height: 1;
   font-weight: 900;
+  color: #f8fafc;
+  text-align: center;
+  z-index: 1;
 }
 
 .center-panel {
@@ -134,16 +142,6 @@
   justify-content: center;
 }
 
-.finished-set-chip.team-a-win {
-  background: rgba(239, 68, 68, 0.16);
-  color: #fecaca;
-}
-
-.finished-set-chip.team-b-win {
-  background: rgba(34, 197, 94, 0.16);
-  color: #bbf7d0;
-}
-
 .empty-finished-sets {
   font-size: 0.68rem;
   color: #94a3b8;
@@ -170,5 +168,14 @@
   .center-panel {
     order: -1;
     min-height: auto;
+  }
+
+  .team-panel {
+    min-height: 150px;
+  }
+
+  .team-score {
+    left: 20px;
+    font-size: clamp(2.8rem, 8vw, 3.8rem);
   }
 }
