@@ -1,59 +1,71 @@
-# VMarqueFrontend
+# V-Marque
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.1.5.
+V-Marque est une application web de gestion de match de volley permettant de préparer une rencontre, suivre le match en direct, gérer les rotations et les changements, puis consulter les statistiques des équipes et des joueurs.
 
-## Development server
 
-To start a local development server, run:
+## Présentation du projet
 
-```bash
-ng serve
-```
+Le projet est composé de deux parties :
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+- un backend en FastAPI qui gère la logique métier, les matchs, les équipes, les joueurs, les lineups, les rotations, les actions de jeu et les statistiques
+- un frontend en Angular qui permet :
+  - de créer la feuille de match
+  - de suivre le match en direct
+  - de visualiser le terrain
+  - de saisir les actions
+  - de consulter les statistiques
 
-## Code scaffolding
+## Fonctionnalités principales
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### Feuille de match
+- création des deux équipes
+- ajout des joueurs
+- choix des couleurs d’équipe
+- définition des positions initiales
+- choix du nombre de sets gagnants
+- choix de l’équipe qui sert au départ
 
-```bash
-ng generate component component-name
-```
+### Match live
+- affichage du score
+- affichage du set en cours
+- visualisation du terrain
+- affichage des joueurs sur le terrain et sur le banc
+- saisie des actions :
+  - ace
+  - faute de service
+  - attaque gagnante
+  - erreur d’attaque
+  - contre gagnant
+  - erreur de contre
+- gestion des changements
+- lancement du set suivant
+- inversion des côtés à chaque changement de set
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+### Statistiques
+- statistiques d’équipe
+- statistiques individuelles
+- recherche d’un joueur
 
-```bash
-ng generate --help
-```
+## Installation et lancement 
 
-## Building
+git clone https://github.com/JulietteSacher/P2I_V-marque_SacherJuliette
+cd P2I_V-marque_SacherJuliette
 
-To build the project run:
+### Pour le backend
+cd backend
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+http://127.0.0.1:8000
 
-```bash
-ng build
-```
+### Pour les tests backend
+cd backend
+python -m pytest -vv
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+### Pour le frontend
+cd frontend
+npm install 
+npm start
+http://localhost:4200
 
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
