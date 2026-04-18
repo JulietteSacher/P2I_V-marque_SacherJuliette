@@ -31,6 +31,9 @@ from app.schemas.team_stats import TeamStats
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
+#-------------------------------------------------
+#  fonction qui permet de récupérer un match ou de renvoyer une erreur 404 si le match n'existe pas
+#-------------------------------------------------
 
 def _get_match_or_404(db: Session, match_id: int) -> Match:
     match = db.query(Match).filter(Match.id == match_id).first()
@@ -38,7 +41,9 @@ def _get_match_or_404(db: Session, match_id: int) -> Match:
         raise HTTPException(status_code=404, detail="Match introuvable.")
     return match
 
-
+#-------------------------------------------------
+#  fonction qui permet de récupérer le set en cours pour un match ou de renvoyer une erreur 400 si aucun set n'est en cours
+#-------------------------------------------------
 def _get_current_set_or_400(db: Session, match_id: int) -> Set:
     current_set = (
         db.query(Set)
@@ -52,7 +57,9 @@ def _get_current_set_or_400(db: Session, match_id: int) -> Set:
         raise HTTPException(status_code=400, detail="Le set courant n'est pas en cours.")
     return current_set
 
-
+#-------------------------------------------------
+#  fonction qui permet de récupérer le dernier set pour un match ou de renvoyer une erreur 400 si aucun set n'est trouvé ou si le dernier set est déjà terminé
+#-------------------------------------------------
 def _get_latest_set_or_400(db: Session, match_id: int) -> Set:
     latest = (
         db.query(Set)
@@ -66,7 +73,9 @@ def _get_latest_set_or_400(db: Session, match_id: int) -> Set:
         raise HTTPException(status_code=400, detail="Le dernier set est terminé.")
     return latest
 
-
+#-------------------------------------------------
+#  fonction qui permet de récupérer l'id de l'équipe adverse dans un match ou de renvoyer une erreur 400 si l'équipe donnée n'est pas dans le match
+#-------------------------------------------------
 def _other_team_id(match: Match, team_id: int) -> int:
     if team_id == match.team_a_id:
         return match.team_b_id
@@ -74,10 +83,15 @@ def _other_team_id(match: Match, team_id: int) -> int:
         return match.team_a_id
     raise HTTPException(status_code=400, detail="Équipe invalide pour ce match.")
 
-
+#-------------------------------------------------
+#  fonction qui calcule le nombre maximum de sets dans un match en fonction du nombre de sets à gagner
+#-------------------------------------------------
 def _max_sets(match: Match) -> int:
     return 2 * match.sets_to_win - 1
 
+#-------------------------------------------------
+#  fonction qui compte le nombre de sets gagnés par chaque équipe dans un match
+#-------------------------------------------------
 
 def _count_sets_won(db: Session, match: Match) -> tuple[int, int]:
     finished_sets = (
@@ -94,7 +108,9 @@ def _count_sets_won(db: Session, match: Match) -> tuple[int, int]:
             b_won += 1
     return a_won, b_won
 
-
+#-------------------------------------------------
+#  fonction qui construit un résumé des sets terminés dans un match, avec le score et l'équipe gagnante de chaque set
+#-------------------------------------------------
 def _finished_sets_summary(db: Session, match: Match) -> list[FinishedSetRead]:
     finished_sets = (
         db.query(Set)
@@ -121,7 +137,9 @@ def _finished_sets_summary(db: Session, match: Match) -> list[FinishedSetRead]:
         )
     return result
 
-
+#-------------------------------------------------
+#  fonction qui vérifie si le lineup d'une équipe est prêt pour un set (6 joueurs sur le terrain avec des positions 1..6) ou de renvoyer une erreur 400 si ce n'est pas le cas
+#-------------------------------------------------
 def _lineup_ready(db: Session, match_id: int, team_id: int) -> bool:
     lineup = (
         db.query(LineupPosition)
@@ -137,6 +155,9 @@ def _lineup_ready(db: Session, match_id: int, team_id: int) -> bool:
     positions = {lp.position for lp in lineup}
     return positions == {1, 2, 3, 4, 5, 6}
 
+#-------------------------------------------------
+#  fonction qui vérifie si les lineups des deux équipes sont prêts pour un set 
+#-------------------------------------------------
 
 def _require_lineups_ready(db: Session, match: Match) -> None:
     if not _lineup_ready(db, match.id, match.team_a_id) or not _lineup_ready(db, match.id, match.team_b_id):
@@ -145,7 +166,9 @@ def _require_lineups_ready(db: Session, match: Match) -> None:
             detail="Lineup incomplet : 6 joueurs (positions 1..6) doivent être définis pour chaque équipe avant de démarrer le set.",
         )
 
-
+#-------------------------------------------------
+#  fonction qui attribue un point à l'équipe gagnante d'une action et qui vérifie si le set ou le match est terminé, en créant un nouveau set si nécessaire
+#-------------------------------------------------
 def _award_point_and_maybe_finish_set(db: Session, match: Match, current_set: Set, winning_team_id: int) -> None:
     if winning_team_id == match.team_a_id:
         current_set.score_team_a += 1
@@ -186,7 +209,9 @@ def _award_point_and_maybe_finish_set(db: Session, match: Match, current_set: Se
     )
     db.add(next_set)
 
-
+#-------------------------------------------------
+#  fonction qui gère la rotation des équipes après un point, en vérifiant que le serveur est correct pour les actions de service et en appliquant la rotation si l'équipe adverse gagne le point
+#-------------------------------------------------
 def _rotate_team_if_needed(
     db: Session,
     match: Match,
@@ -259,7 +284,9 @@ def _rotate_team_if_needed(
 
     current_set.serving_team_id = winning_team_id
 
-
+#-------------------------------------------------
+#  endpoint pour créer un match en vérifiant que les équipes existent et sont différentes, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.post("", response_model=MatchRead, status_code=status.HTTP_201_CREATED)
 def create_match(payload: MatchCreate, db: Session = Depends(get_db)):
     team_a = db.query(Team).filter(Team.id == payload.team_a_id).first()
@@ -281,12 +308,16 @@ def create_match(payload: MatchCreate, db: Session = Depends(get_db)):
     db.refresh(match)
     return match
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer les détails d'un match, ou renvoyer une erreur 404 si le match n'existe pas
+#-------------------------------------------------
 @router.get("/{match_id}", response_model=MatchRead)
 def get_match(match_id: int, db: Session = Depends(get_db)):
     return _get_match_or_404(db, match_id)
 
-
+#-------------------------------------------------
+#  endpoint pour démarrer un match en créant le premier set, et en renvoyant une erreur 404 si le match n'existe pas ou une erreur 400 si le match a déjà commencé
+#-------------------------------------------------
 @router.post("/{match_id}/start", response_model=MatchRead)
 def start_match(match_id: int, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -312,7 +343,9 @@ def start_match(match_id: int, db: Session = Depends(get_db)):
     db.refresh(match)
     return match
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer le set en cours pendant un match, ou renvoyer une erreur 404 si le match ou le set n'existe pas
+#-------------------------------------------------
 @router.get("/{match_id}/current-set", response_model=SetRead)
 def get_current_set(match_id: int, db: Session = Depends(get_db)):
     _get_match_or_404(db, match_id)
@@ -326,7 +359,9 @@ def get_current_set(match_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Aucun set trouvé pour ce match.")
     return current_set
 
-
+#-------------------------------------------------
+#  endpoint pour ajouter un point à une équipe pendant un match, en vérifiant que le match est en cours et que le set est en cours, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.post("/{match_id}/point")
 def add_point(match_id: int, payload: PointCreate, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -352,7 +387,9 @@ def add_point(match_id: int, payload: PointCreate, db: Session = Depends(get_db)
         "set_status": current_set.status,
     }
 
-
+#-------------------------------------------------
+#  endpoint pour ajouter une action à un match, en vérifiant que le match et le set sont en cours, que le joueur existe et participe au match, et en appliquant la logique de point et de rotation si nécessaire, ou en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.post("/{match_id}/actions", response_model=ActionRead, status_code=status.HTTP_201_CREATED)
 def add_action(match_id: int, payload: ActionCreate, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -408,7 +445,9 @@ def add_action(match_id: int, payload: ActionCreate, db: Session = Depends(get_d
     db.refresh(action)
     return action
 
-
+#-------------------------------------------------
+#  endpoint pour définir l'équipe au service au début d'un set, en vérifiant que le match et le set sont en cours, que l'équipe existe et participe au match, que les lineups sont prêts, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.post("/{match_id}/serve")
 def set_serving_team(match_id: int, payload: ServeStart, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -439,6 +478,9 @@ def set_serving_team(match_id: int, payload: ServeStart, db: Session = Depends(g
         "starting_team_id": current_set.starting_team_id,
     }
 
+#-------------------------------------------------
+#  endpoint pour démarrer le set suivant dans un match en cours, en vérifiant que le match est en cours, que le set suivant est prêt à être démarré, que les lineups sont prêts, et en déterminant automatiquement l'équipe au service en fonction du set précédent, ou en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 
 @router.post("/{match_id}/next-set")
 def start_next_set(match_id: int, db: Session = Depends(get_db)):
@@ -499,7 +541,9 @@ def start_next_set(match_id: int, db: Session = Depends(get_db)):
         "starting_team_id": current_set.starting_team_id,
     }
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer les statistiques d'un joueur dans un match, en vérifiant que le match et le joueur existent et que le joueur participe au match, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.get("/{match_id}/players/{player_id}/stats", response_model=PlayerStats)
 def get_player_stats(match_id: int, player_id: int, db: Session = Depends(get_db)):
     actions = (
@@ -528,7 +572,9 @@ def get_player_stats(match_id: int, player_id: int, db: Session = Depends(get_db
         total_faults=service_faults + attack_faults + block_faults,
     )
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer les statistiques d'une équipe dans un match, en vérifiant que le match et l'équipe existent et que l'équipe participe au match, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.get("/{match_id}/teams/{team_id}/stats", response_model=TeamStats)
 def get_team_stats(match_id: int, team_id: int, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -562,7 +608,9 @@ def get_team_stats(match_id: int, team_id: int, db: Session = Depends(get_db)):
         total_faults=service_faults + attack_faults + block_faults,
     )
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer le lineup d'une équipe dans un match, en vérifiant que le match et l'équipe existent et que l'équipe participe au match, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.get("/{match_id}/teams/{team_id}/lineup")
 def get_team_lineup(match_id: int, team_id: int, db: Session = Depends(get_db)):
     lineup = (
@@ -585,7 +633,9 @@ def get_team_lineup(match_id: int, team_id: int, db: Session = Depends(get_db)):
         for lp, player in lineup
     ]
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer la vue du terrain d'une équipe dans un match, en vérifiant que le match et l'équipe existent et que l'équipe participe au match, que le set est en cours, que le lineup est complet et valide, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.get("/{match_id}/teams/{team_id}/court-view")
 def get_court_view(match_id: int, team_id: int, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -655,7 +705,9 @@ def get_court_view(match_id: int, team_id: int, db: Session = Depends(get_db)):
         },
     }
 
-
+#-------------------------------------------------
+#  endpoint pour récupérer la vue du match en direct, avec les informations sur le match, le set en cours, les équipes, les lineups sur le terrain, le score et les sets terminés, en vérifiant que le match existe et que le set en cours existe, et en renvoyant une erreur 404 ou 400 si ce n'est pas le cas
+#-------------------------------------------------
 @router.get("/{match_id}/live", response_model=MatchLiveRead)
 def get_match_live(match_id: int, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
@@ -733,7 +785,9 @@ def get_match_live(match_id: int, db: Session = Depends(get_db)):
         finished_sets=_finished_sets_summary(db, match),
     )
 
-
+#-------------------------------------------------
+#  endpoint pour réinitialiser tous les matchs et toutes les données associées, en supprimant toutes les actions, lineups, snapshots, sets, matchs, joueurs et équipes de la base de données
+#-------------------------------------------------
 @router.delete("/reset-all", status_code=status.HTTP_204_NO_CONTENT)
 def reset_all(db: Session = Depends(get_db)):
     db.query(RallyAction).delete(synchronize_session=False)
@@ -745,7 +799,9 @@ def reset_all(db: Session = Depends(get_db)):
     db.query(Team).delete(synchronize_session=False)
     db.commit()
 
-
+#-------------------------------------------------
+#  endpoint pour supprimer un match et toutes les données associées, en vérifiant que le match existe, et en supprimant toutes les actions, lineups, snapshots, sets, joueurs et équipes liés à ce match, ou en renvoyant une erreur 404 si le match n'existe pas
+#------------------------------------------------
 @router.delete("/{match_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_match(match_id: int, db: Session = Depends(get_db)):
     match = _get_match_or_404(db, match_id)
