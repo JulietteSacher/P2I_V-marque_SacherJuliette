@@ -60,8 +60,11 @@ uvicorn app.main:app --reload
 http://127.0.0.1:8000
 
 ### Pour les tests backend
+cd P2I_V-marque_SacherJuliette
 cd backend
+pip install pytest
 python -m pytest -vv
+
 
 ### Pour le frontend
 cd frontend
